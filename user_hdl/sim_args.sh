@@ -1,5 +1,56 @@
 #!/bin/bash
 
+# vlib -c
+# vlib work
+# vmap work work
+
+function cmp_wd()
+{
+  #xvlog -sv gpo_watchdog.sv
+  xvlog     gpo_watchdog.v
+  xvlog     gpo_register.v  
+  xvlog -sv gpo_watchdog_tb.sv
+  xvlog -sv gpo_watchdog_tc.sv
+
+  vlog     gpo_watchdog.v
+  vlog     gpo_register.v    
+  vlog -sv gpo_watchdog_tb.sv
+  vlog -sv gpo_watchdog_tc.sv
+
+  # xvlog -sv gpo_watchdog.sv
+  # xvlog -sv gpo_watchdog_tb.sv
+  # xvlog -sv gpo_watchdog_tc.sv
+    
+  # vlog -sv gpo_watchdog.sv
+  # vlog -sv gpo_watchdog_tb.sv
+  # vlog -sv gpo_watchdog_tc.sv
+  
+}
+
+function elab_wd()
+{
+  xelab --debug typical --timescale 1ns/1ps work.gpo_watchdog_tb work.gpo_watchdog_tc
+}
+
+function sim_wd()
+{
+  xsim -gui work.gpo_watchdog_tb#work.gpo_wathdog_tc &
+  #vsim work.gpo_watchdog &
+}
+
+function wd()
+{
+  #cmp_simple && elab_simple && sim_simple
+  cmp_wd && elab_wd && sim_wd &
+}
+
+function wd_m()
+{
+  #cmp_simple && elab_simple && sim_simple
+  cmp_wd && vsim work.gpo_watchdog_tb work.gpo_watchdog_tc -do wave.do &
+}
+
+
 function cmp_simple()
 {
   #xvlog -sv counter.sv
@@ -146,6 +197,31 @@ function beam()
 
 
 case $1 in
+    cmp_wd)
+      echo "Running cmp"
+      cmp_wd
+      exit
+    ;;
+    elab_wd)
+      echo "Running cmp"
+      elab_wd
+      exit
+    ;;
+    sim_wd)
+      echo "Running cmp"
+      sim_wd
+      exit
+    ;;
+    wd)
+      echo "Running cmp"
+      wd
+      exit
+    ;;
+    wd_m)
+      echo "Running cmp"
+      wd_m
+      exit
+    ;;
     cmp_simple)
       echo "Running cmp"
       cmp_simple
