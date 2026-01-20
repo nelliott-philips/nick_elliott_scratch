@@ -4,6 +4,13 @@
 # vlib work
 # vmap work work
 
+function cmp_ext()
+{
+  xvlog  gpo_watchdog_v2.v
+  vlog   gpo_watchdog_v2.v  
+}
+
+
 function cmp_wd()
 {
   #xvlog -sv gpo_watchdog.sv
@@ -197,6 +204,11 @@ function beam()
 
 
 case $1 in
+    cmp_ext)
+      echo "Running cmp_ext"
+      cmp_ext
+      exit
+    ;;
     cmp_wd)
       echo "Running cmp"
       cmp_wd
