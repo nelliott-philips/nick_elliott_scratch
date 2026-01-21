@@ -11,29 +11,48 @@ module gpo_watchdog_tc();
    localparam int  BASE2_CNT_IDX = 28;
    
    typedef logic [31:0] uint32_t;
-   typedef enum int 
-   {
-     WD_START_STOP_IDX           = 0,
-     APPEASE_IDX                 = 1,
-     DISABLE_INTERRUPT_IDX       = 2,
-     CLEAR_EARLY_WARN_INTRPT_IDX = 3,
-     HAS_TIMED_OUT_IDX           = 4,
-     WD_CNT_MSB                  = BASE2_CNT_IDX-1,
-     WD_CNT_LSB                  = BASE2_CNT_IDX-4
-   } wd_ctl_bits_t;
-    
+   
+   // typedef enum int 
+   // {
+   //   WD_START_STOP_IDX           = 0,
+   //   APPEASE_IDX                 = 1,
+   //   DISABLE_INTERRUPT_IDX       = 2,
+   //   CLEAR_EARLY_WARN_INTRPT_IDX = 3,
+   //   HAS_TIMED_OUT_IDX           = 4,
+   //   WD_CNT_MSB                  = BASE2_CNT_IDX-1,
+   //   WD_CNT_LSB                  = BASE2_CNT_IDX-4
+   // } wd_ctl_bits_t; 
+  typedef enum int {
+    WD_START_STOP_IDX            = 0,
+    APPEASE_IDX                  = 1,
+    ENABLE_INTERRUPT_IDX         = 2,
+    CLEAR_EARLY_WARN_INT_IDX     = 3,
+    HAS_TIMED_OUT_IDX            = 4,
+    IS_IN_SHUTDOWN_IDX           = 5,
+    FORCE_SHUTDOWN_IDX           = 6,
+    EARLY_WARN_POLL_IDX          = 7 
+  } WD_CTL;
   
   // Register Write Masks 
-  localparam	uint32_t START_WD                 = (32'd1        << WD_START_STOP_IDX);
-  localparam	uint32_t APPEASE_WD               = (32'd1        << APPEASE_IDX);
-  localparam	uint32_t CLEAR_EARLY_WARN_INTRPT  = (32'd1        << CLEAR_EARLY_WARN_INTRPT_IDX);
-  localparam	uint32_t DISABLE_WD_INTRPT        = (32'd1        << DISABLE_INTERRUPT_IDX);
-  localparam	uint32_t RD_TIMEOUT_CNT_MSK       = (32'h000_000F << WD_CNT_MSB);
-  localparam	uint32_t RD_HAS_TIMED_OUT_MSK     = (32'h000_000F << HAS_TIMED_OUT_IDX);
+  localparam	uint32_t START_WD                     = (32'd1 << WD_START_STOP_IDX);
+  localparam	uint32_t APPEASE_WD                   = (32'd1 << APPEASE_IDX);
+  localparam	uint32_t CLEAR_EARLY_WARN_INTRPT_WD   = (32'd1 << CLEAR_EARLY_WARN_INT_IDX);
+  localparam	uint32_t ENABLE_WD_INTRPT             = (32'd1 << ENABLE_INTERRUPT_IDX);
+  localparam	uint32_t IS_IN_SHUTDOWN_WD            = (32'd1 << IS_IN_SHUTDOWN_IDX);
+  localparam	uint32_t FORCE_SHUTDOWN_WD            = (32'd1 << FORCE_SHUTDOWN_IDX);
+  localparam	uint32_t EARLY_WARN_POLL_WD           = (32'd1 << EARLY_WARN_POLL_IDX);
+ 						      
+						      
+  localparam	uint32_t TIMEOUT_INTV_3000ms          = {16'd3000, 16'd0};
+  localparam	uint32_t TIMEOUT_INTV_2ms             = {   16'd2, 16'd0};
+  localparam	uint32_t TIMEOUT_INTV_20ms            = {  16'd20, 16'd0};   
+  localparam	uint32_t TIMEOUT_INTV_100ms           = { 16'd100, 16'd0};
 
-  localparam	uint32_t TIMEOUT_INTV_3000ms      = {16'd3000, 16'd0};
-  localparam	uint32_t TIMEOUT_INTV_2ms         = {   16'd2, 16'd0};
-
+  int ii = 0;
+  int passing = 1;
+  int rand_cnt = 0;
+   
+   
   uint32_t tmp_reg = 32'd0;
 
   //task tWR_GPO(input logic [31:0] data_in);
@@ -51,10 +70,10 @@ module gpo_watchdog_tc();
      
   endtask // tWR_GPO
 
-  task tINIT();
-     @(posedge `TB.clk);
-     `TB.clr_bit_mask = CLEAR_EARLY_WARN_INTRPT | APPEASE_WD;
-  endtask
+  // task tINIT();
+  //    @(posedge `TB.clk);
+  //    `TB.clr_bit_mask = CLEAR_EARLY_WARN_INTRPT_WD | APPEASE_WD;
+  // endtask
 
   task tSHORT_TIMEOUT_TEST();
     
@@ -62,11 +81,115 @@ module gpo_watchdog_tc();
       @(posedge `TB.clk);
     end 
 
-    //tWR_GPO(START_WD | TIMEOUT_INTV_3000ms);
-    tWR_GPO(START_WD | TIMEOUT_INTV_2ms);     
-    //tWR_GPO(START_WD | DISABLE_WD_INTRPT);     
+    // tWR_GPO(START_WD | TIMEOUT_INTV_3000ms);
+    // tWR_GPO(START_WD | TIMEOUT_INTV_2ms);
+    // tWR_GPO(START_WD | TIMEOUT_INTV_100ms );
+    tWR_GPO(32'd0);
      
-  endtask 
+    @(posedge `TB.clk);
+    tWR_GPO(START_WD | TIMEOUT_INTV_20ms);
+
+
+    // Run loops to check a few successful appease intervals
+    for(ii = 0; ii < 5; ii++) begin
+
+      // Wait for less than a timeout interval
+      #18ms;
+
+      // Check if shutdown has occured
+      if (`TB.shutdown == 0) begin
+         passing &= 1;
+      end else begin
+         passing = 0;	 
+      end
+
+      // Read-back-write equivalent of appease to appease watchdog before
+      // timeout
+      tWR_GPO(APPEASE_WD | `TB.gpo_reg_data_out);
+       
+    end
+      
+    if (passing == 1) begin
+      $display("%t, Passed", $time);
+    end else begin
+      $display("%t, failed", $time);
+    end
+
+    passing = 1;
+
+    // Run loops to check a few "late" appease intervals
+    for(ii = 0; ii < 5; ii++) begin
+
+      // Wait for more than a timeout interval
+      #22ms;
+
+      // Check if shutdown has occured
+      if (`TB.shutdown == 1'b0) begin
+         passing = 0;
+      end else begin
+         passing &= 1;	 
+      end
+
+      // Read-back-write equivalent of appease to appease watchdog before
+      // timeout
+      tWR_GPO( `TB.gpo_reg_data_out | APPEASE_WD );
+       
+    end // for (ii = 0; ii < 5; ii++)
+
+    if (passing == 1) begin 
+      $display("%t, Passed, Timed out as expected", $time);
+    end else begin
+      $display("%t, Failed, Did not timeout as expected", $time);       
+    end
+
+    passing = 1;
+
+    for(ii = 0; ii < 10; ii++) begin
+      if (`TB.shutdown == 1) begin
+	$display("Watching timeout...");
+        #3.3ms;
+      end
+    end
+    $display("Done waiting, testing stop watchdog");
+
+    tWR_GPO( `TB.gpo_reg_data_out & ~START_WD );
+
+    $display("wait 61 ms"); // arbitrary odd time
+    #61ms
+      
+    tWR_GPO( `TB.gpo_reg_data_out | START_WD );
+
+    // Run loops to check a few successful appease intervals
+    for(ii = 0; ii < 5; ii++) begin
+
+      // Wait for less than a timeout interval
+      #18ms;
+
+      // Check if shutdown has occured
+      if (`TB.shutdown == 0) begin
+         passing &= 1;
+      end else begin
+         passing = 0;	 
+      end
+
+      // Read-back-write equivalent of appease to appease watchdog before
+      // timeout
+      tWR_GPO(APPEASE_WD | `TB.gpo_reg_data_out);
+       
+    end
+      
+    if (passing == 1) begin
+      $display("%t, Passed", $time);
+    end else begin
+      $display("%t, failed", $time);
+    end
+
+    passing = 1;
+     
+     
+  endtask // tSHORT_TIMEOUT_TEST
+
+  
 
   task tRD_GPO();
   endtask // tRD_GPO
@@ -75,7 +198,7 @@ module gpo_watchdog_tc();
 
     @(negedge `TB.rst);
 
-    tINIT();
+    //tINIT();
     
     tSHORT_TIMEOUT_TEST();
      

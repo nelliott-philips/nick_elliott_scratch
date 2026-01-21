@@ -14,7 +14,6 @@ module gpo_watchdog_v2 #
   input wire	     clk,
   input wire	     rst,
   input wire [31:0]  gpo_reg_data_i,
-  input wire  [31:0] gpo_reg_data_stb_i, 
   output wire [31:0] gpo_reg_data_o,
   output wire [31:0] gpo_clear_msk_o,
   output wire	     early_warn_intrpt_o,
@@ -37,8 +36,8 @@ module gpo_watchdog_v2 #
   localparam integer FORCE_SHUTDOWN_IDX       = 6;
   localparam integer EARLY_WARN_POLL_IDX      = 7; 
    
-  localparam [0:0]     WATCHDOG_STOPPED_S0      = 1'b0;
-  localparam [0:0]     WATCHDOG_RUNNING_S1      = 1'b1;
+  localparam [0:0]   WATCHDOG_STOPPED_S0      = 1'b0;
+  localparam [0:0]   WATCHDOG_RUNNING_S1      = 1'b1;
 
   // TODO, NE, Consider revising, not sure if this is a hack or a good implementation
   // but given that this module and the gpo reg are instantiated in schematic view, might be the best approach

@@ -68,7 +68,7 @@ module gpo_watchdog_tb();
      .clk                   (clk),
      .rst                   (rst),
      .gpo_reg_data_i        (dataout),
-     .gpo_reg_data_stb_i    (strbout),			      
+     //.gpo_reg_data_stb_i    (strbout), 			      
      .gpo_reg_data_o        (gpo_reg_data_out),
      .gpo_clear_msk_o       (clr_bit_mask_wire), 
      .early_warn_intrpt_o   (early_warn_intrpt),

@@ -55,7 +55,6 @@ add wave -noupdate -group all /gpo_watchdog_tb/gpo_wd_dut/has_timed_out
 add wave -noupdate -group all /gpo_watchdog_tb/gpo_wd_dut/shutdown
 add wave -noupdate -group all /gpo_watchdog_tb/gpo_wd_dut/early_warn_intrpt
 add wave -noupdate -expand -group wd_features /gpo_watchdog_tb/gpo_wd_dut/gpo_reg_data_i
-add wave -noupdate -expand -group wd_features /gpo_watchdog_tb/gpo_wd_dut/gpo_reg_data_stb_i
 add wave -noupdate -expand -group wd_features /gpo_watchdog_tb/gpo_wd_dut/gpo_reg_data_o
 add wave -noupdate -expand -group wd_features /gpo_watchdog_tb/gpo_wd_dut/gpo_clear_msk_o
 add wave -noupdate -expand -group wd_features /gpo_watchdog_tb/gpo_wd_dut/early_warn_intrpt_o
@@ -68,7 +67,7 @@ add wave -noupdate -expand -group wd_features /gpo_watchdog_tb/gpo_wd_dut/has_ti
 add wave -noupdate -expand -group wd_features /gpo_watchdog_tb/gpo_wd_dut/shutdown
 add wave -noupdate -expand -group wd_features /gpo_watchdog_tb/gpo_wd_dut/early_warn_intrpt
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {224882813 ps} 0} {{Cursor 2} {117275822928 ps} 0}
+WaveRestoreCursors {{Cursor 1} {224882813 ps} 0} {{Cursor 2} {146953125000 ps} 0}
 quietly wave cursor active 2
 configure wave -namecolwidth 342
 configure wave -valuecolwidth 223
@@ -84,4 +83,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {315 ms}
+WaveRestoreZoom {0 ps} {525 ms}

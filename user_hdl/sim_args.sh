@@ -41,7 +41,7 @@ function elab_wd()
 
 function sim_wd()
 {
-  xsim -gui work.gpo_watchdog_tb#work.gpo_wathdog_tc &
+  xsim -gui work.gpo_watchdog_tb#work.gpo_watchdog_tc &
   #vsim work.gpo_watchdog &
 }
 
