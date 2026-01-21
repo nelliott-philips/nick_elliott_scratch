@@ -31,6 +31,9 @@ module gpo_watchdog_tc();
   localparam	uint32_t RD_TIMEOUT_CNT_MSK       = (32'h000_000F << WD_CNT_MSB);
   localparam	uint32_t RD_HAS_TIMED_OUT_MSK     = (32'h000_000F << HAS_TIMED_OUT_IDX);
 
+  localparam	uint32_t TIMEOUT_INTV_3000ms      = {16'd3000, 16'd0};
+  localparam	uint32_t TIMEOUT_INTV_2ms         = {   16'd2, 16'd0};
+
   uint32_t tmp_reg = 32'd0;
 
   //task tWR_GPO(input logic [31:0] data_in);
@@ -50,7 +53,7 @@ module gpo_watchdog_tc();
 
   task tINIT();
      @(posedge `TB.clk);
-    `TB.clr_bit_mask = CLEAR_EARLY_WARN_INTRPT | APPEASE_WD;
+     `TB.clr_bit_mask = CLEAR_EARLY_WARN_INTRPT | APPEASE_WD;
   endtask
 
   task tSHORT_TIMEOUT_TEST();
@@ -59,7 +62,8 @@ module gpo_watchdog_tc();
       @(posedge `TB.clk);
     end 
 
-    tWR_GPO(START_WD);
+    //tWR_GPO(START_WD | TIMEOUT_INTV_3000ms);
+    tWR_GPO(START_WD | TIMEOUT_INTV_2ms);     
     //tWR_GPO(START_WD | DISABLE_WD_INTRPT);     
      
   endtask 
@@ -77,47 +81,51 @@ module gpo_watchdog_tc();
      
   end
 
-  initial begin
-    forever begin
-       // Wait for interrupt
-       @(posedge `TB.early_warn_intrpt);
-       $display("Caught early warn interrupt");
+  task tV2_STIM();
+    
+  endtask 
 
-       // Wait a small random number of cycles
-       repeat($urandom_range(5,50)) begin
-          @(posedge `TB.clk);
-       end
-       
-       tmp_reg = `TB.gpo_reg_data_out;       
-       @(posedge `TB.clk);
-
-       tWR_GPO(APPEASE_WD | tmp_reg);
-
-       // Random reset occurences and durations
-       if ($urandom_range(0, 1000) <  100) begin
-	  
-       	 repeat($urandom_range(0, 10)) begin
-       	   @(posedge `TB.clk);
-       	 end
-       	  
-         `TB.rst = 1;
-       
-       	 repeat($urandom_range(0, 20)) begin
-       	   @(posedge `TB.clk);
-       	 end
-       	  
-         `TB.rst = 0;
-
-       	 repeat($urandom_range(0, 20)) begin
-       	   @(posedge `TB.clk);
-       	 end
-
-         tWR_GPO( START_WD | tmp_reg);
-	  
-       end
-       
-    end
-  end
+  // initial begin
+  //   forever begin
+  //      // Wait for interrupt
+  //      @(posedge `TB.early_warn_intrpt);
+  //      $display("Caught early warn interrupt");
+  // 
+  //      // Wait a small random number of cycles
+  //      repeat($urandom_range(5,50)) begin
+  //         @(posedge `TB.clk);
+  //      end
+  //      
+  //      tmp_reg = `TB.gpo_reg_data_out;       
+  //      @(posedge `TB.clk);
+  // 
+  //      tWR_GPO(APPEASE_WD | tmp_reg);
+  // 
+  //      // Random reset occurences and durations
+  //      if ($urandom_range(0, 1000) <  100) begin
+  // 	  
+  //      	 repeat($urandom_range(0, 10)) begin
+  //      	   @(posedge `TB.clk);
+  //      	 end
+  //      	  
+  //        `TB.rst = 1;
+  //      
+  //      	 repeat($urandom_range(0, 20)) begin
+  //      	   @(posedge `TB.clk);
+  //      	 end
+  //      	  
+  //        `TB.rst = 0;
+  // 
+  //      	 repeat($urandom_range(0, 20)) begin
+  //      	   @(posedge `TB.clk);
+  //      	 end
+  // 
+  //        tWR_GPO( START_WD | tmp_reg);
+  // 	  
+  //      end
+  //      
+  //   end
+  // end
   
   initial begin
      

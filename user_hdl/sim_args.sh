@@ -14,12 +14,12 @@ function cmp_ext()
 function cmp_wd()
 {
   #xvlog -sv gpo_watchdog.sv
-  xvlog     gpo_watchdog.v
+  xvlog     gpo_watchdog_v2.v
   xvlog     gpo_register.v  
   xvlog -sv gpo_watchdog_tb.sv
   xvlog -sv gpo_watchdog_tc.sv
 
-  vlog     gpo_watchdog.v
+  vlog     gpo_watchdog_v2.v
   vlog     gpo_register.v    
   vlog -sv gpo_watchdog_tb.sv
   vlog -sv gpo_watchdog_tc.sv
@@ -106,7 +106,7 @@ function vcmp_beam()
   # $XILINX_VIVADO/data/verilog/src/glbl.v \
   # -L xpm
   #   
-  # vlog ../beamformer_base.gen/sources_1/bd/design_1/ip/design_1_dds_compiler_0_1/design_1_dds_compiler_0_1_sim_netlist.v
+  # Vlog ../Beamformer_base.gen/sources_1/bd/design_1/ip/design_1_dds_compiler_0_1/design_1_dds_compiler_0_1_sim_netlist.v
   # 
   # vlog ../beamformer_base.gen/sources_1/bd/design_1/ip/design_1_c_addsub_0_0/design_1_c_addsub_0_0_sim_netlist.v
   # 
