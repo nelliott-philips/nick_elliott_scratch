@@ -13,12 +13,13 @@ function cmp_ext()
 
 function cmp_wd()
 {
-  #xvlog -sv gpo_watchdog.sv
+  xvlog     gpo_watchdog.v
   xvlog     gpo_watchdog_v2.v
   xvlog     gpo_register.v  
   xvlog -sv gpo_watchdog_tb.sv
   xvlog -sv gpo_watchdog_tc.sv
 
+  vlog     gpo_watchdog.v  
   vlog     gpo_watchdog_v2.v
   vlog     gpo_register.v    
   vlog -sv gpo_watchdog_tb.sv
@@ -54,7 +55,8 @@ function wd()
 function wd_m()
 {
   #cmp_simple && elab_simple && sim_simple
-  cmp_wd && vsim work.gpo_watchdog_tb work.gpo_watchdog_tc -do wave.do &
+  cmp_wd && vsim work.gpo_watchdog_tb work.gpo_watchdog_tc -do wave_simple.do &
+  #cmp_wd && vsim work.gpo_watchdog_tb work.gpo_watchdog_tc -do wave.do &    
 }
 
 

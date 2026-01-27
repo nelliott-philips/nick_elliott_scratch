@@ -48,6 +48,10 @@ module gpo_watchdog_tc();
   localparam	uint32_t TIMEOUT_INTV_20ms            = {  16'd20, 16'd0};   
   localparam	uint32_t TIMEOUT_INTV_100ms           = { 16'd100, 16'd0};
 
+  // 10e-9*(2^17) = 0.013sec = 13ms
+  localparam	uint32_t SIMPLE_TIMEOUT_10ms           = {  32'd1 << 20};
+   
+
   int ii = 0;
   int passing = 1;
   int rand_cnt = 0;
@@ -75,6 +79,120 @@ module gpo_watchdog_tc();
   //    `TB.clr_bit_mask = CLEAR_EARLY_WARN_INTRPT_WD | APPEASE_WD;
   // endtask
 
+  task tSHORT_TIMEOUT_TEST_SIMPLE();
+    
+    repeat(5) begin
+      @(posedge `TB.clk);
+    end 
+
+    // tWR_GPO(START_WD | TIMEOUT_INTV_3000ms);
+    // tWR_GPO(START_WD | TIMEOUT_INTV_2ms);
+    // tWR_GPO(START_WD | TIMEOUT_INTV_100ms );
+    tWR_GPO(32'd0);
+     
+    @(posedge `TB.clk);
+    tWR_GPO(START_WD);
+
+    // Run loops to check a few successful appease intervals
+    for(ii = 0; ii < 5; ii++) begin
+
+      // Wait for less than a timeout interval
+      #10ms; // Timeout is 13 ms
+
+      // Check if shutdown has occured
+      if (`TB.shutdown == 0) begin
+         passing &= 1;
+      end else begin
+         passing = 0;	 
+      end
+
+      // Read-back-write equivalent of appease to appease watchdog before
+      // timeout
+      tWR_GPO(APPEASE_WD | `TB.gpo_reg_data_out);
+       
+    end
+      
+    if (passing == 1) begin
+      $display("%t, Passed", $time);
+    end else begin
+      $display("%t, failed", $time);
+    end
+
+    passing = 1;
+
+    // Run loops to check a few "late" appease intervals
+    for(ii = 0; ii < 5; ii++) begin
+
+      // Wait for more than a timeout interval
+      #15ms;
+
+      // Check if shutdown has occured
+      if (`TB.shutdown == 1'b0) begin
+         passing = 0;
+      end else begin
+         passing &= 1;	 
+      end
+
+      // Read-back-write equivalent of appease to appease watchdog before
+      // timeout
+      tWR_GPO( APPEASE_WD | `TB.gpo_reg_data_out );
+       
+    end // for (ii = 0; ii < 5; ii++)
+
+    if (passing == 1) begin 
+      $display("%t, Passed, Timed out as expected", $time);
+    end else begin
+      $display("%t, Failed, Did not timeout as expected", $time);       
+    end
+
+    passing = 1;
+
+    for(ii = 0; ii < 10; ii++) begin
+      if (`TB.shutdown == 1) begin
+	$display("Watching timeout...");
+        #3.3ms;
+      end
+    end
+    $display("Done waiting, testing stop watchdog");
+
+    tWR_GPO( `TB.gpo_reg_data_out & ~START_WD );
+
+    $display("wait 61 ms"); // arbitrary odd time
+    #61ms
+      
+    tWR_GPO( `TB.gpo_reg_data_out | START_WD );
+
+    // Run loops to check a few successful appease intervals
+    for(ii = 0; ii < 5; ii++) begin
+
+      // Wait for less than a timeout interval
+      #18ms;
+
+      // Check if shutdown has occured
+      if (`TB.shutdown == 0) begin
+         passing &= 1;
+      end else begin
+         passing = 0;	 
+      end
+
+      // Read-back-write equivalent of appease to appease watchdog before
+      // timeout
+      tWR_GPO(APPEASE_WD | `TB.gpo_reg_data_out);
+       
+    end
+      
+    if (passing == 1) begin
+      $display("%t, Passed", $time);
+    end else begin
+      $display("%t, failed", $time);
+    end
+
+    passing = 1;
+     
+     
+  endtask // tSHORT_TIMEOUT_TEST
+
+   
   task tSHORT_TIMEOUT_TEST();
     
     repeat(5) begin
@@ -200,7 +318,8 @@ module gpo_watchdog_tc();
 
     //tINIT();
     
-    tSHORT_TIMEOUT_TEST();
+    //tSHORT_TIMEOUT_TEST();
+    tSHORT_TIMEOUT_TEST_SIMPLE();     
      
   end
 
