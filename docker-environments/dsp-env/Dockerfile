@@ -1,74 +1,50 @@
-FROM python:3.11-slim
+FROM ubuntu:20.04
 
-# Avoid interactive prompts during apt
 ENV DEBIAN_FRONTEND=noninteractive
 
 # -----------------------------
 # System + GUI dependencies
 # -----------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # GUI / X11 / Tk
-    python3-tk \
-    tk \
-    tcl \
-    libx11-6 \
-    libxext6 \
-    libxrender1 \
-    libsm6 \
-    libice6 \
-    libglib2.0-0 \
-    libgl1 \
-    libnss3 \
-    libasound2 \
-    dbus-x11 \
-    x11-apps \
-    # Utilities ModelSim commonly expects
-    bash \
-    csh \
-    tcsh \
-    unzip \
-    procps \
-    ca-certificates \
+    # Base utilities commonly expected by EDA tools
+    ca-certificates curl git locales \
+    bash csh tcsh procps lsb-release \
+    unzip xz-utils file \
+    # X11 client utilities for testing DISPLAY
+    x11-apps xauth \
+    # X11 runtime libs (GUI support)
+    libx11-6 libxext6 libxrender1 libxi6 libxtst6 libxrandr2 libxcursor1 libxfixes3 \
+    libsm6 libice6 \
+    libxcb1 libxau6 libxdmcp6 \
+    # GTK / fonts (frequently needed by vendor GUIs)
+    libglib2.0-0 libgtk-3-0 libpango-1.0-0 libcairo2 libgdk-pixbuf2.0-0 libatk1.0-0 \
+    fontconfig fonts-dejavu-core \
+    # Misc common deps
+    libnss3 libasound2 libgl1 \
+    # Python + Tk for matplotlib GUI
+    python3 python3-pip python3-tk \
     && rm -rf /var/lib/apt/lists/*
 
 # -----------------------------
-# Python DSP / scientific stack
+# Python DSP stack
 # -----------------------------
-RUN pip install --no-cache-dir \
-    numpy \
-    scipy \
-    matplotlib \
-    pandas \
-    sympy \
-    scikit-learn \
-    numba \
-    pywavelets \
-    soundfile \
-    librosa
+RUN pip3 install --no-cache-dir \
+    numpy scipy matplotlib pandas sympy \
+    scikit-learn numba pywavelets \
+    soundfile librosa
 
-# Force GUI backend for matplotlib
 ENV MPLBACKEND=TkAgg
 
 # -----------------------------
-# ModelSim installer
+# ModelSim installer (baked in)
 # -----------------------------
-# Copy the installer into the image (local builds only; do not publish)
+RUN mkdir -p /opt/install
 COPY ModelSimSetup-18.1.0.625-linux.run /opt/install/ModelSimSetup.run
 RUN chmod +x /opt/install/ModelSimSetup.run
 
-# Common install target
+# Common install target (mount a volume at /opt/intelFPGA for persistence)
 ENV MODELSIM_HOME=/opt/intelFPGA/modelsim
 ENV PATH="${MODELSIM_HOME}/bin:${PATH}"
 
-# -----------------------------
-# Workspace
-# -----------------------------
 WORKDIR /work
-
-# Optional demo
-COPY demo_plot.py /work/demo_plot.py
-
-# Default to shell so you can:
-#  - run the ModelSim installer
-#  - launch GUIs (vsim, gnome-terminal, etc.)
 CMD ["/bin/bash"]

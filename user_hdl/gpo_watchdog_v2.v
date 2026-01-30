@@ -52,15 +52,13 @@ module gpo_watchdog_v2 #
 
   assign gpo_clear_msk_o                       = GPO_CLEAR_MSK;
    
-  // 2^X * Tclk timebase interval
-  reg                     wd_state          = 1'b0;
-  reg   [15:0]            timeout_cnt_ms    = 'd0;
-  reg  		          has_timed_out     = 'd0;
-  reg  		          shutdown          = 'd0;
-  reg  		          early_warn_intrpt = 'd0;
-
-  reg			  clk_en            = 1'b0;
-  reg [MS_TIMEBASE_MSB:0] clk_en_cnt        = 'd0;
+  reg                     wd_state             = 1'b0;
+  reg   [15:0]            timeout_cnt_ms       = 'd0;
+  reg  		          has_timed_out        = 'd0;
+  reg  		          shutdown             = 'd0;
+  reg  		          early_warn_intrpt    = 'd0;
+  reg			  clk_en               = 1'b0;
+  reg [MS_TIMEBASE_MSB:0] clk_en_cnt           = 'd0;
   reg			  appease_clk_en_latch = 1'b0;
    
 
@@ -146,6 +144,7 @@ module gpo_watchdog_v2 #
 
 	    // If target timeout interval is reached or exceeded, then shutdown and mark timeout
             if (timeout_cnt_ms >= gpo_reg_data_i[31:16] ) begin
+	       
               timeout_cnt_ms   <= timeout_cnt_ms;
               shutdown         <= 1'b1;
               has_timed_out    <= 1'b1;
@@ -186,9 +185,6 @@ module gpo_watchdog_v2 #
   assign shutdown_o                               = shutdown | gpo_reg_data_i[FORCE_SHUTDOWN_IDX];
    
   // Show written count value                    
-  assign gpo_reg_data_o[31:16]                    = gpo_reg_data_i[31:16];
-
-  // Reserved register bits OR write registers bits
   assign gpo_reg_data_o[31:16]                    = gpo_reg_data_i[31:16];
 
   // Unused/reserved bits
