@@ -30,7 +30,7 @@ N = 23;         % filter order, match previous version by Andy H.
 b = fir1(N,[fc1 fc2]*2/Fs,'bandpass');
 
 % gain factor to deal with insertion loss if needed  
-gain_factor = 10; % in units of dB
+gain_factor = 0; % in units of dB
 
 filter_coef_float=b.*10^(gain_factor./20);
 
