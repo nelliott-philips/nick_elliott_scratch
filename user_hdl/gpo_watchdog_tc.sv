@@ -50,6 +50,28 @@ module gpo_watchdog_tc();
 
   // 10e-9*(2^17) = 0.013sec = 13ms
   localparam	uint32_t SIMPLE_TIMEOUT_10ms           = {  32'd1 << 20};
+
+  // --------------------------------------------------------------------------------------------   
+  // ----------  CHROMA DATAPATH GPO REGISTER                        ----------------------------
+  // --------------------------------------------------------------------------------------------
+  localparam integer        EN_BPF_ACTIV_MON_IDX   = 17;
+  localparam integer        EN_MOTION_FILT_MON_IDX = 16;
+
+  // BP = Bandpass, MOT = Motion, 3 bits each for possible of 8 filters (fewer than 8 are currently implementd
+  localparam integer        MOT_SEL_MSB            = 5;
+  localparam integer        MOT_SEL_LSB            = 3;
+  localparam integer        BP_SEL_MSB             = 2;
+  localparam integer        BP_SEL_LSB             = 0;
+   
+  localparam reg     [2:0]  EEP_NORM_LUT_SEL       = 3'd0;
+  localparam reg     [2:0]  PVO18_NORM_LUT_SEL     = 3'd1;
+  localparam reg     [2:0]  PRODIGY_NORM_LUT_SEL   = 3'd2;
+
+  logic [31:0]		    filter_data            = 'd0;
+   
+  uint32_t tmp_chroma_reg = 32'd0;
+   
+  // --------------------------------------------------------------------------------------------   
    
 
   int ii = 0;
@@ -74,10 +96,87 @@ module gpo_watchdog_tc();
      
   endtask // tWR_GPO
 
+  //task tWR_GPO(input logic [31:0] data_in);
+  task tWR_GPO_CHROMA(input uint32_t data_in);
+     
+     @(posedge `TB.clk);
+     `TB.chroma_gpo_in = data_in;
+     
+     @(posedge `TB.clk);
+     @(posedge `TB.clk);
+     `TB.chroma_wr_strobe = 1'b1;
+     @(posedge `TB.clk);
+     `TB.chroma_wr_strobe = 1'b0;
+     @(posedge `TB.clk);
+     
+  endtask // tWR_GPO
+   
   // task tINIT();
   //    @(posedge `TB.clk);
   //    `TB.clr_bit_mask = CLEAR_EARLY_WARN_INTRPT_WD | APPEASE_WD;
   // endtask
+
+  logic [31:0] activity_mon = 'd0;
+
+  
+   
+  task tDRIVE_CHROMA_GPO();
+
+
+    $display("Beginning register writes: %t", $time);
+     
+    tmp_chroma_reg = 32'd0;
+    tmp_chroma_reg = (32'd1 << EN_BPF_ACTIV_MON_IDX) | (32'd3 << 3) | (32'd1 << 0);
+     
+    tWR_GPO_CHROMA(tmp_chroma_reg);
+
+    for(int ii = 0; ii < 100; ii++) begin
+      @(posedge `TB.clk);
+
+      activity_mon = `TB.chroma_gpo_out;
+       
+    end
+
+    $display("Setting to motion filter monitor: %t", $time);
+    tmp_chroma_reg = (32'd1 << EN_MOTION_FILT_MON_IDX) | (32'd3 << 3) | (32'd1 << 0);
+     
+    tWR_GPO_CHROMA(tmp_chroma_reg);
+
+    
+  endtask // tDRIVE_CHROMA_GPO
+
+  initial begin
+
+    @(negedge `TB.rst);
+    $display("Coming out of reset %t", $time);
+     
+     
+    repeat(5) begin
+      @(posedge `TB.clk);
+      $display("5 clocks %t", $time);       
+    end
+
+    tDRIVE_CHROMA_GPO();
+     
+  end
+
+  // Random data stimulus
+  initial begin
+     @(negedge `TB.rst);
+     
+     forever begin
+
+       @(posedge `TB.clk);
+
+
+       filter_data = $urandom();
+	
+       `TB.motion_filter_data    = filter_data[15:0];
+       `TB.band_pass_filter_data = filter_data[11:0];
+				  
+     end
+  end
+      
 
   task tSHORT_TIMEOUT_TEST_SIMPLE();
     
@@ -384,7 +483,7 @@ module gpo_watchdog_tc();
      
     `TB.rst = 1'b1;
      
-    #(10us);
+    #(100ns);
     `TB.rst = 1'b0;
     
   end
