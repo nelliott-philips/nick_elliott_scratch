@@ -4,11 +4,133 @@
 # vlib work
 # vmap work work
 
+function cmp_tp()
+{
+
+  xvlog.bat -sv \
+  $XILINX_VIVADO/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv \
+  -L xpm
+ 
+  xvlog.bat -sv \
+  $XILINX_VIVADO/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv \
+  -L xpm
+ 
+  xvlog.bat -sv \
+  $XILINX_VIVADO/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv \
+  -L xpm
+ 
+  xvlog.bat -sv \
+  $XILINX_VIVADO/data/verilog/src/glbl.v \
+  -L xpm
+
+
+  # DDS Compiler package first
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/hdl/pkg_dds_compiler_v6_0.vhd
+  
+  # DDS Compiler implementation
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/hdl/dds_compiler_v6_0.vhd
+  
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/hdl/dds_compiler_v6_0_comp.vhd
+  
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/hdl/dds_compiler_v6_0_hdl_comps.vhd
+  
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/hdl/dds_compiler_v6_0_core.vhd
+  
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/hdl/dds_compiler_v6_0_eff.vhd
+  
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/hdl/dds_compiler_v6_0_eff_lut.vhd
+  
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/hdl/dds_compiler_v6_0_rdy.vhd
+  
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/hdl/dds_compiler_v6_0_viv.vhd
+  
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/hdl/dds_compiler_v6_0_viv_comp.vhd
+  
+  # IP simulation wrapper
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/sim/dds_compiler_0.vhd
+
+  # DDS top-level simulation wrapper
+  xvhdl.bat \
+  chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/sim/dds_compiler_0.vhd
+  
+  xvlog.bat -sv chroma_tp.sv
+  xvlog.bat -sv chroma_tp_tb.sv
+  xvlog.bat -sv chroma_tp_tc.sv
+
+  #xelab.bat --debug typical \
+  #    --timescale 1ns/1ps \
+  #    work.chroma_tp_tb \
+  #    glbl \
+  #    -L xpm \
+  #    -L unisims_ver  
+}
+
+function elab_tp()
+{
+  xelab.bat --debug typical \
+      --timescale 1ns/1ps \
+      work.chroma_tp_tb \
+      work.chroma_tp_tc \
+      glbl \
+      -L xpm \
+      -L unisims_ver  
+
+}
+
+function sim_tp()
+{
+    #xsim.bat -gui work.chroma_tp_tb#work.glbl &
+    #xsim.bat -gui work.chroma_tp_tb#work.glbl --view basic.wcfg &
+    xsim.bat -gui --view *wcfg work.chroma_tp_tb#work.chroma_tp_tc#work.glbl &
+
+}
+
+function tp()
+{
+  cmp_tp && elab_tp && sim_tp
+}
+
+
+
 function cmp_ext()
 {
   #xvlog  gpo_watchdog_v2.v
   #vlog   gpo_watchdog_v2.v
-  vlog    gpo_chroma_path.v
+  #vlog    gpo_chroma_path.v
+    # xvlog.bat -sv correlator.sv
+    #xvlog.bat -sv top_tb.sv
+  xvlog.bat -sv watchdog_timer_tb.sv
+  xvlog.bat -sv watchdog_timer_v2.sv
+  xvlog.bat -sv gpo_sr_register.v
+}
+
+function elab_ext()
+{
+  #xelab --debug typical --timescale 1ns/1ps work.gpo_watchdog_tb work.gpo_watchdog_tc
+  xelab.bat --debug typical --timescale 1ns/1ps work.watchdog_timer_tb 
+}
+
+function sim_ext()
+{
+  # xsim -gui work.counter_tb &
+  # vsim work.watchdog_timer_tb &
+  xsim.bat -gui work.watchdog_timer_tb &    
+}
+
+function ext()
+{
+  cmp_ext && elab_ext && sim_ext
 }
 
 
@@ -49,7 +171,7 @@ function sim_wd()
   #vsim work.gpo_watchdog &
 }
 
-function wd()
+     function wd()
 {
   #cmp_simple && elab_simple && sim_simple
   cmp_wd && elab_wd && sim_wd &
@@ -212,6 +334,41 @@ case $1 in
     cmp_ext)
       echo "Running cmp_ext"
       cmp_ext
+      exit
+    ;;
+    cmp_tp)
+      echo "Running cmp_tp"
+      cmp_tp
+      exit
+    ;;
+    elab_tp)
+      echo "Running cmp_tp"
+      elab_tp
+      exit
+    ;;
+    sim_tp)
+      echo "Running cmp_tp"
+      sim_tp
+      exit
+    ;;
+    tp)
+      echo "Running cmp_tp"
+      tp
+      exit
+    ;;
+    elab_ext)
+      echo "Elaborating ext"
+      elab_ext
+      exit
+    ;;
+    sim_ext)
+      echo "Sim ext"
+      sim_ext
+      exit
+    ;;
+    ext)
+      echo "Finishing..."
+      ext
       exit
     ;;
     cmp_wd)
