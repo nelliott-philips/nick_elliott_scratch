@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="work.chroma_tp_tb#work.chroma_tp_tc#work.glbl.wdb" id="1">
+         <top_modules>
+            <top_module name="chroma_tp_tb" />
+            <top_module name="chroma_tp_tc" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="7,962.200000 us"></ZoomStartTime>
+      <ZoomEndTime time="8,007.600001 us"></ZoomEndTime>
+      <Cursor1Time time="8,000.000000 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="276"></NameColumnWidth>
+      <ValueColumnWidth column_width="92"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="24" />
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/gpo_reg_in" type="array">
+      <obj_property name="ElementShortName">gpo_reg_in[31:0]</obj_property>
+      <obj_property name="ObjectShortName">gpo_reg_in[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/gpo_reg_out" type="array">
+      <obj_property name="ElementShortName">gpo_reg_out[31:0]</obj_property>
+      <obj_property name="ObjectShortName">gpo_reg_out[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/data_tvalid" type="logic">
+      <obj_property name="ElementShortName">data_tvalid</obj_property>
+      <obj_property name="ObjectShortName">data_tvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/data_tdata" type="array">
+      <obj_property name="ElementShortName">data_tdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_tdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/data_tdata" type="array">
+      <obj_property name="ElementShortName">data_tdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_tdata[31:0]</obj_property>
+      <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+      <obj_property name="CellHeight">100</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/data_tlast" type="logic">
+      <obj_property name="ElementShortName">data_tlast</obj_property>
+      <obj_property name="ObjectShortName">data_tlast</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tvalid" type="logic">
+      <obj_property name="ElementShortName">s_axis_phase_tvalid</obj_property>
+      <obj_property name="ObjectShortName">s_axis_phase_tvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tdata" type="array">
+      <obj_property name="ElementShortName">s_axis_phase_tdata[63:0]</obj_property>
+      <obj_property name="ObjectShortName">s_axis_phase_tdata[63:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tlast" type="logic">
+      <obj_property name="ElementShortName">s_axis_phase_tlast</obj_property>
+      <obj_property name="ObjectShortName">s_axis_phase_tlast</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tvalid" type="logic">
+      <obj_property name="ElementShortName">m_axis_data_tvalid</obj_property>
+      <obj_property name="ObjectShortName">m_axis_data_tvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tdata" type="array">
+      <obj_property name="ElementShortName">m_axis_data_tdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axis_data_tdata[31:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tdata" type="array">
+      <obj_property name="ElementShortName">m_axis_data_tdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axis_data_tdata[31:0]</obj_property>
+      <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+      <obj_property name="CellHeight">100</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tlast" type="logic">
+      <obj_property name="ElementShortName">m_axis_data_tlast</obj_property>
+      <obj_property name="ObjectShortName">m_axis_data_tlast</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_phase_tvalid" type="logic">
+      <obj_property name="ElementShortName">m_axis_phase_tvalid</obj_property>
+      <obj_property name="ObjectShortName">m_axis_phase_tvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_phase_tdata" type="array">
+      <obj_property name="ElementShortName">m_axis_phase_tdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axis_phase_tdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_phase_tdata" type="array">
+      <obj_property name="ElementShortName">m_axis_phase_tdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axis_phase_tdata[31:0]</obj_property>
+      <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+      <obj_property name="CellHeight">100</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_phase_tlast" type="logic">
+      <obj_property name="ElementShortName">m_axis_phase_tlast</obj_property>
+      <obj_property name="ObjectShortName">m_axis_phase_tlast</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/sine" type="array">
+      <obj_property name="ElementShortName">sine[11:0]</obj_property>
+      <obj_property name="ObjectShortName">sine[11:0]</obj_property>
+      <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+      <obj_property name="CellHeight">100</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/sine" type="array">
+      <obj_property name="ElementShortName">sine[11:0]</obj_property>
+      <obj_property name="ObjectShortName">sine[11:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tb/ch_tp0/cosine" type="array">
+      <obj_property name="ElementShortName">cosine[11:0]</obj_property>
+      <obj_property name="ObjectShortName">cosine[11:0]</obj_property>
+      <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+      <obj_property name="CellHeight">100</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider25">
+      <obj_property name="label">Fractional</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="group24" type="group">
+      <obj_property name="label">Fractional</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/a_scale" type="array">
+         <obj_property name="ElementShortName">a_scale[11:0]</obj_property>
+         <obj_property name="ObjectShortName">a_scale[11:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/clk" type="logic">
+         <obj_property name="ElementShortName">clk</obj_property>
+         <obj_property name="ObjectShortName">clk</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/ce_repeat" type="logic">
+         <obj_property name="ElementShortName">ce_repeat</obj_property>
+         <obj_property name="ObjectShortName">ce_repeat</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/a_scale" type="array">
+         <obj_property name="ElementShortName">a_scale[11:0]</obj_property>
+         <obj_property name="ObjectShortName">a_scale[11:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+         <obj_property name="CellHeight">100</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/tp_gain_cnt" type="array">
+         <obj_property name="ElementShortName">tp_gain_cnt[7:0]</obj_property>
+         <obj_property name="ObjectShortName">tp_gain_cnt[7:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/sine" type="array">
+         <obj_property name="ElementShortName">sine[11:0]</obj_property>
+         <obj_property name="ObjectShortName">sine[11:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/sine_prod_s1" type="array">
+         <obj_property name="ElementShortName">sine_prod_s1[23:0]</obj_property>
+         <obj_property name="ObjectShortName">sine_prod_s1[23:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/sine_prod_s1" type="array">
+         <obj_property name="ElementShortName">sine_prod_s1[23:0]</obj_property>
+         <obj_property name="ObjectShortName">sine_prod_s1[23:0]</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+         <obj_property name="CellHeight">100</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/cosine_prod_s1" type="array">
+         <obj_property name="ElementShortName">cosine_prod_s1[23:0]</obj_property>
+         <obj_property name="ObjectShortName">cosine_prod_s1[23:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/cosine_prod_s1" type="array">
+         <obj_property name="ElementShortName">cosine_prod_s1[23:0]</obj_property>
+         <obj_property name="ObjectShortName">cosine_prod_s1[23:0]</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+         <obj_property name="CellHeight">100</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/sin_mag_s2" type="array">
+         <obj_property name="ElementShortName">sin_mag_s2[11:0]</obj_property>
+         <obj_property name="ObjectShortName">sin_mag_s2[11:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/sin_mag_s2" type="array">
+         <obj_property name="ElementShortName">sin_mag_s2[11:0]</obj_property>
+         <obj_property name="ObjectShortName">sin_mag_s2[11:0]</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+         <obj_property name="CellHeight">100</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/cos_mag_s2" type="array">
+         <obj_property name="ElementShortName">cos_mag_s2[11:0]</obj_property>
+         <obj_property name="ObjectShortName">cos_mag_s2[11:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/cos_mag_s2" type="array">
+         <obj_property name="ElementShortName">cos_mag_s2[11:0]</obj_property>
+         <obj_property name="ObjectShortName">cos_mag_s2[11:0]</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+         <obj_property name="CellHeight">100</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/sin_round_s3" type="array">
+         <obj_property name="ElementShortName">sin_round_s3[13:0]</obj_property>
+         <obj_property name="ObjectShortName">sin_round_s3[13:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/sin_round_s3" type="array">
+         <obj_property name="ElementShortName">sin_round_s3[13:0]</obj_property>
+         <obj_property name="ObjectShortName">sin_round_s3[13:0]</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+         <obj_property name="CellHeight">100</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/cos_round_s3" type="array">
+         <obj_property name="ElementShortName">cos_round_s3[13:0]</obj_property>
+         <obj_property name="ObjectShortName">cos_round_s3[13:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/cos_round_s3" type="array">
+         <obj_property name="ElementShortName">cos_round_s3[13:0]</obj_property>
+         <obj_property name="ObjectShortName">cos_round_s3[13:0]</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+         <obj_property name="CellHeight">100</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/sin_has_frac_s2" type="logic">
+         <obj_property name="ElementShortName">sin_has_frac_s2</obj_property>
+         <obj_property name="ObjectShortName">sin_has_frac_s2</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/cos_has_frac_s2" type="logic">
+         <obj_property name="ElementShortName">cos_has_frac_s2</obj_property>
+         <obj_property name="ObjectShortName">cos_has_frac_s2</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/sin_is_neg_s2" type="logic">
+         <obj_property name="ElementShortName">sin_is_neg_s2</obj_property>
+         <obj_property name="ObjectShortName">sin_is_neg_s2</obj_property>
+      </wvobject>
+      <wvobject fp_name="/chroma_tp_tb/ch_tp0/cos_is_neg_s2" type="logic">
+         <obj_property name="ElementShortName">cos_is_neg_s2</obj_property>
+         <obj_property name="ObjectShortName">cos_is_neg_s2</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>
