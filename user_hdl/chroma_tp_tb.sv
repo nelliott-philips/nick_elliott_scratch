@@ -7,11 +7,17 @@ module chroma_tp_tb();
   logic [31:0]  gpo_reg_in;
   logic [31:0]	gpo_reg_out;
   logic	        data_tvalid;
-  logic [31:0]	data_tdata;
-  logic	        data_tlast;
   logic	        acq_gate;
   logic	        cf_enable;
   logic         test_pattern_en;
+  logic	        sine_tvalid;
+  logic         cosine_tvalid;
+  logic [15:0]  sine_tdata;
+  logic [15:0]  cosine_tdata;
+  logic         sine_tlast;
+  logic         cosine_tlast;
+  logic         framesync;
+  logic         frame_a;
 
    
   chroma_tp ch_tp0(
@@ -24,15 +30,18 @@ module chroma_tp_tb();
     .test_pattern_en (test_pattern_en),
     .gpo_reg_in      (gpo_reg_in),
     .gpo_reg_out     (gpo_reg_out),
-    .data_tvalid     (data_tvalid),
-    .data_tdata      (data_tdata),
-    .data_tlast	     (data_tlast)
+    .sine_tvalid     (sine_tvalid),
+    .cosine_tvalid   (cosine_tvalid),
+    .sine_tdata      (sine_tdata),
+    .cosine_tdata    (cosine_tdata),
+    .sine_tlast      (sine_tlast),
+    .cosine_tlast    (cosine_tlast)
   );
 
   initial begin
      clk = 0;
 
-     forever begin #20; clk = ~clk; end
+     forever begin #5; clk = ~clk; end
      
   end
 

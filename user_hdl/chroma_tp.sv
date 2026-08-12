@@ -16,9 +16,12 @@ module chroma_tp #(
     input wire          test_pattern_en,
     input wire [31:0]	gpo_reg_in,
     output logic [31:0]	gpo_reg_out,
-    output logic	data_tvalid,
-    output logic [31:0]	data_tdata,
-    output logic	data_tlast
+    output logic	sine_tvalid,
+    output logic	cosine_tvalid,
+    output logic [15:0]	sine_tdata,
+    output logic [15:0]	cosine_tdata,
+    output logic	sine_tlast,
+    output logic	cosine_tlast
   );
 
   localparam real CLOCK_FREQ          = 100.0e6;
@@ -26,26 +29,22 @@ module chroma_tp #(
   //localparam real FTW_FP       = $floor((DESIRED_FREQ * 2.0**32)/CLOCK_FREQ);
   localparam real FTW_FP              = (DESIRED_FREQ/CLOCK_FREQ)*(2.0**32 + 0.5);
   localparam logic [31:0] FTW_LOGIC   = $rtoi(FTW_FP);
-   
-
-  initial begin: compile_time_check_initial
-     $display("CLOCK_FREQ: %d",   CLOCK_FREQ);
-     $display("DESIRED_FREQ: %d", DESIRED_FREQ);
-     $display("FTW_FP: %d",       FTW_FP);
-     $display("FTW_LOGIC: %d",    FTW_LOGIC);
-     $display("FTW_LOGIC: %b",    FTW_LOGIC);
-  end
 
   localparam integer N_GAIN_CNT = 184;
   localparam integer TP_GAIN_CNT_WIDTH = $clog2(N_GAIN_CNT);
   logic [TP_GAIN_CNT_WIDTH-1:0] tp_gain_cnt;
+
+  localparam integer		N_SYNC_PIPE = 3;
+  logic [N_SYNC_PIPE-1:0]	framesync_pipe;
+  logic [N_SYNC_PIPE-1:0]       acq_gate_pipe;
+  logic [N_SYNC_PIPE-1:0]       frame_a_pipe;
 
   /*
   logic [11:0] tp_arr[N_GAIN_CNT] = {
     400,400,400,400,400,
     41C,41C,41C,41C,41C,
     437,437,437,437,437,
-    454,454,454,454,454,
+ 454,454,454,454,454,
     470,470,470,470,470,
     48B,48B,48B,48B,48B,
     4A7,4A7,4A7,4A7,4A7,
@@ -126,7 +125,8 @@ module chroma_tp #(
 
   // Inputs
   logic        s_axis_phase_tvalid;
-  logic [63:0] s_axis_phase_tdata;
+  //logic [63:0] s_axis_phase_tdata;   
+  logic [71:0] s_axis_phase_tdata;
   logic        s_axis_phase_tlast;
 
   // Outputs
@@ -158,6 +158,14 @@ module chroma_tp #(
   logic [CE_REP_CNT_WIDTH-1:0]	ce_repeat_cnt = CE_REPEAT_CNT-1;
   logic			        ce_repeat     = 1'b0;
 
+  // Pipeline control inputs to maintain precise and instant synchronization of phase/frequency shifts
+  // on frame/acquisition window boundaries
+  always_ff @(posedge clk) begin
+    framesync_pipe <= {framesync_pipe[N_SYNC_PIPE-2:0], framesync};
+    acq_gate_pipe  <= {acq_gate_pipe[N_SYNC_PIPE-2:0], acq_gate};
+    frame_a_pipe   <= {frame_a_pipe[N_SYNC_PIPE-2:0], frame_a};
+  end
+
 
   // Use clock enable to repeat ROM/Distributed RAM values over multiple cycles
   // set CE_REPEAT_CNT to 1 to read out ROM values each cycle
@@ -187,26 +195,86 @@ module chroma_tp #(
 	
      end else begin
        if (ce_repeat) begin
+	  
          a_scale     <= tp_arr[tp_gain_cnt];
-         tp_gain_cnt <= tp_gain_cnt - 1'b1;
-         
-         if(tp_gain_cnt == 'd0) begin
+
+         // by default, unless valid is asserted from NCO, stay at starting index
+         tp_gain_cnt <= N_GAIN_CNT;
+
+	 // if valid, increment (downward) through gain samples (TODO: in future add configurable increment)
+	 if (m_axis_data_tvalid) begin
+           tp_gain_cnt <= tp_gain_cnt - 1'b1;
+	 end
+
+	 // If its the last sample of an acquisition window reset the gain index in preperation
+	 // for the next acquisition window
+         if (tp_gain_cnt == 'd0 || framesync_pipe[N_SYNC_PIPE-1]) begin
            tp_gain_cnt <= N_GAIN_CNT - 1'b1;
          end
        end
      end
   end
+
+  logic [7:0]   resync_ctrl;
+  logic [31:0]	POFF_phase_offset_ctrl;
+  logic [31:0]	PINC_phase_inc_ctrl;
+  logic	accum_2x_aline_sync;
+   
+
+  // 
+  always_ff @(posedge clk) begin
+    if (rst) begin
+       
+      POFF_phase_offset_ctrl <= 'd0;
+      accum_2x_aline_sync <= 1'b0;
+       
+    end else begin
+
+      // every other acquisition bmode acquisition boundary, update the phase offset for the
+      // chromaflo frame (ie !frame_a)
+      if (framesync_pipe[N_SYNC_PIPE-1] && frame_a_pipe[N_SYNC_PIPE-1]) begin
+        accum_2x_aline_sync <= ~accum_2x_aline_sync;
+      end
+      
+      if (accum_2x_aline_sync) begin
+        POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl + 32'h0800_0000;
+      end
+       
+    end
+  end
+   
+   
+  assign PINC_phase_inc_ctrl = FTW_LOGIC;
+
+  // Use pipelined acq_gate rising edge to restart (resync) initial phase index, this makes the test pattern deterministic
+  // within the acquisition window, only the LSB is used as AXI Stream is byte aligned
+  //assign resync_ctrl = {7'd0, !acq_gate_pipe[N_SYNC_PIPE-1] && acq_gate_pipe[N_SYNC_PIPE-2]};
+  assign resync_ctrl = {7'd0, !acq_gate_pipe[N_SYNC_PIPE-1] && acq_gate_pipe[N_SYNC_PIPE-2]};   
    
   always_ff @(posedge clk) begin
      if (rst == 1'b1) begin
-	s_axis_phase_tlast  <= 1'b0;
-	s_axis_phase_tdata  <= 'd0;
-	s_axis_phase_tvalid <= 'd0;
+	
+       s_axis_phase_tlast  <= 1'b0;
+       s_axis_phase_tdata  <= 'd0;
+       s_axis_phase_tvalid <= 'd0;
 	
      end else begin
-       s_axis_phase_tlast  <= 1'b0;
-       s_axis_phase_tdata  <= FTW_LOGIC;
-       s_axis_phase_tvalid <= 1'b1;
+ 
+       if (frame_a_pipe[N_SYNC_PIPE-1]) begin
+	  
+         // s_axis_phase_tlast  <= acq_gate_pipe[N_SYNC_PIPE-1] && !acq_gate_pipe[N_SYNC_PIPE-2];
+         // s_axis_phase_tdata  <= 'd0;
+         // s_axis_phase_tvalid <= acq_gate_pipe[N_SYNC_PIPE-1];
+         s_axis_phase_tlast  <= 'd0;
+         s_axis_phase_tdata  <= 'd0;
+         s_axis_phase_tvalid <= 'd0;
+	  
+       end else begin
+         s_axis_phase_tlast  <= acq_gate_pipe[N_SYNC_PIPE-1] && !acq_gate_pipe[N_SYNC_PIPE-2];
+         s_axis_phase_tdata  <= {resync_ctrl, POFF_phase_offset_ctrl, PINC_phase_inc_ctrl};
+         s_axis_phase_tvalid <= acq_gate_pipe[N_SYNC_PIPE-1];
+       end
+	
      end
   end
 
@@ -219,7 +287,7 @@ module chroma_tp #(
   dds_compiler_0 dds0 (
     .aclk                  (clk),                  // input wire aclk
     .s_axis_phase_tvalid   (s_axis_phase_tvalid),  // input wire s_axis_phase_tvalid
-    .s_axis_phase_tdata    (s_axis_phase_tdata),   // input wire [63 : 0] s_axis_phase_tdata
+    .s_axis_phase_tdata    (s_axis_phase_tdata),   // input wire [71 : 0] s_axis_phase_tdata
     .s_axis_phase_tlast    (s_axis_phase_tlast),   // input wire s_axis_phase_tlast
     .m_axis_data_tvalid    (m_axis_data_tvalid),   // output wire m_axis_data_tvalid
     .m_axis_data_tdata     (m_axis_data_tdata),    // output wire [31 : 0] m_axis_data_tdata
@@ -251,15 +319,15 @@ module chroma_tp #(
   // Multiply block
   always @(posedge clk) begin
     if (rst) begin
-      sine_prod_s1         <= 'd0;
-      cosine_prod_s1       <= 'd0;
-      sine_prod_valid_s1   <= 'd0;
-      cosine_prod_valid_s1 <= 'd0;
+      sine_prod_s1          <= 'd0;
+      cosine_prod_s1        <= 'd0;
+      //sine_prod_valid_s1    <= 'd0;  TODO
+      //cosine_prod_valid_s1  <= 'd0;  TODO
     end else begin
-        sine_prod_s1          <= a_scale*sine;
-        cosine_prod_s1        <= a_scale*cosine;
-        sine_prod_valid_s1    <= m_axis_data_tvalid;
-        cosine_prod_valid_s1  <= m_axis_data_tvalid;
+      sine_prod_s1          <= a_scale*sine;
+      cosine_prod_s1        <= a_scale*cosine;
+      //sine_prod_valid_s1    <= m_axis_data_tvalid; TODO
+      //cosine_prod_valid_s1  <= m_axis_data_tvalid; TODO
     end
   end // else: !if(rst)
 
@@ -273,14 +341,13 @@ module chroma_tp #(
    
   logic [N_PIPE-1:0] pipe_valid = 'd0;
   logic [N_PIPE-1:0] pipe_tlast = 'd0;
-
   
-  // Pipelined signed multiply drawing operands from input A: NCO (Numerically Controlled Oscillator
-  // and input B: a_scale coefficient, each is 12 bit signed, output is the upper 12 bits
+  // Pipelined signed multiply using operands from input A: NCO (Numerically Controlled Oscillator
+  // and input B: a_scale coefficient, each is 12 bit signed, output is the upper 12 bits of 24bit prod
   always @(posedge clk) begin
 
-    pipe_valid[N_PIPE-1:1] <= pipe_valid[N_PIPE-2:0];
-    pipe_tlast[N_PIPE-1:1] <= pipe_tlast[N_PIPE-2:0];
+    pipe_valid <= {pipe_valid[N_PIPE-2:0], m_axis_data_tvalid};
+    pipe_tlast <= {pipe_tlast[N_PIPE-2:0], m_axis_phase_tlast};
 
     //////  Stage 1 S1 -> S2     
     // Capture magnitude and presence of fractional bits for rounding in next pipeline stage
@@ -319,11 +386,24 @@ module chroma_tp #(
       cos_round_s3 <= $signed({1'b0, ({1'b0, cos_mag_s2} + cos_has_frac_s2)});       
     end
 		     
-  end // always @ (posedge clk)
+  end
 
-
+  // Sign extend to 16 bit
+  assign sine_tdata   = {sin_round_s3[13], sin_round_s3[13], sin_round_s3};
+  assign cosine_tdata = {cos_round_s3[13], cos_round_s3[13], cos_round_s3};
+   
+  // Logging and Analysis
+  initial begin: compile_time_check_initial
+     $display("CLOCK_FREQ: %d",   CLOCK_FREQ);
+     $display("DESIRED_FREQ: %d", DESIRED_FREQ);
+     $display("FTW_FP: %d",       FTW_FP);
+     $display("FTW_LOGIC: %d",    FTW_LOGIC);
+     $display("FTW_LOGIC: %b",    FTW_LOGIC);
+  end
 
 endmodule // chroma_tp
+
+
 
 /*
 
