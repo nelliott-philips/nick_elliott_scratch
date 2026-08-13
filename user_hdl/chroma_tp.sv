@@ -199,7 +199,7 @@ module chroma_tp #(
      if (rst) begin
 	
        a_scale     <= tp_arr[N_GAIN_CNT-1];
-       tp_gain_cnt <= N_GAIN_CNT;
+       tp_gain_cnt <= N_GAIN_CNT-1;
 	
      end else begin
        if (ce_repeat) begin
@@ -207,7 +207,7 @@ module chroma_tp #(
          a_scale     <= tp_arr[tp_gain_cnt];
 
          // by default, unless valid is asserted from NCO, stay at starting index
-         tp_gain_cnt <= N_GAIN_CNT;
+         tp_gain_cnt <= N_GAIN_CNT-1;
 
 	 // if valid, increment (downward) through gain samples (TODO: in future add configurable increment)
 	 // if (m_axis_data_tvalid) begin TODO, rework
