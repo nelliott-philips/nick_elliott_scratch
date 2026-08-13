@@ -34,10 +34,10 @@ module chroma_tp #(
   localparam integer TP_GAIN_CNT_WIDTH = $clog2(N_GAIN_CNT);
   logic [TP_GAIN_CNT_WIDTH-1:0] tp_gain_cnt;
 
-  localparam integer		N_SYNC_PIPE = 3;
-  logic [N_SYNC_PIPE-1:0]	framesync_pipe;
+  localparam integer		N_SYNC_PIPE = 2;
+  //logic [N_SYNC_PIPE-1:0]	framesync_pipe; // TODO, remove pipelining
   logic [N_SYNC_PIPE-1:0]       acq_gate_pipe;
-  logic [N_SYNC_PIPE-1:0]       frame_a_pipe;
+  //logic [N_SYNC_PIPE-1:0]       frame_a_pipe;   // TODO, remove pipelining
 
   /*
   logic [11:0] tp_arr[N_GAIN_CNT] = {
@@ -161,9 +161,9 @@ module chroma_tp #(
   // Pipeline control inputs to maintain precise and instant synchronization of phase/frequency shifts
   // on frame/acquisition window boundaries
   always_ff @(posedge clk) begin
-    framesync_pipe <= {framesync_pipe[N_SYNC_PIPE-2:0], framesync};
+    // framesync_pipe <= {framesync_pipe[N_SYNC_PIPE-2:0], framesync};  todo, remove
     acq_gate_pipe  <= {acq_gate_pipe[N_SYNC_PIPE-2:0], acq_gate};
-    frame_a_pipe   <= {frame_a_pipe[N_SYNC_PIPE-2:0], frame_a};
+    // frame_a_pipe   <= {frame_a_pipe[N_SYNC_PIPE-2:0], frame_a}; todo, remove
   end
 
 
@@ -208,7 +208,8 @@ module chroma_tp #(
 
 	 // If its the last sample of an acquisition window reset the gain index in preperation
 	 // for the next acquisition window
-         if (tp_gain_cnt == 'd0 || framesync_pipe[N_SYNC_PIPE-1]) begin
+         //if (tp_gain_cnt == 'd0 || framesync_pipe[N_SYNC_PIPE-1]) begin TODO, REMOVE
+         if (tp_gain_cnt == 'd0 || framesync) begin
            tp_gain_cnt <= N_GAIN_CNT - 1'b1;
          end
        end
@@ -224,20 +225,25 @@ module chroma_tp #(
   // 
   always_ff @(posedge clk) begin
     if (rst) begin
-       
-      POFF_phase_offset_ctrl <= 'd0;
-      accum_2x_aline_sync <= 1'b0;
+      
+      // This is equivalent to negative 32'h3333_3333 which is the PINC, this should create a ~0 degree phase init state
+      //       POFF_phase_offset_ctrl <= 'd0;  TODO, remove
+      POFF_phase_offset_ctrl <= 32'hCCCCCCCD; 
+      accum_2x_aline_sync    <= 1'b0;
        
     end else begin
 
       // every other acquisition bmode acquisition boundary, update the phase offset for the
       // chromaflo frame (ie !frame_a)
-      if (framesync_pipe[N_SYNC_PIPE-1] && frame_a_pipe[N_SYNC_PIPE-1]) begin
+      //if (framesync_pipe[N_SYNC_PIPE-1] && frame_a_pipe[N_SYNC_PIPE-1]) begin  TODO, remove
+      if (framesync && frame_a) begin	 
         accum_2x_aline_sync <= ~accum_2x_aline_sync;
       end
       
       if (accum_2x_aline_sync) begin
-        POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl + 32'h0800_0000;
+        //POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl + 32'h0800_0000; // TODO
+         POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl; // keep the same for debug only
+	 
       end
        
     end
@@ -249,30 +255,35 @@ module chroma_tp #(
   // Use pipelined acq_gate rising edge to restart (resync) initial phase index, this makes the test pattern deterministic
   // within the acquisition window, only the LSB is used as AXI Stream is byte aligned
   //assign resync_ctrl = {7'd0, !acq_gate_pipe[N_SYNC_PIPE-1] && acq_gate_pipe[N_SYNC_PIPE-2]};
-  assign resync_ctrl = {7'd0, !acq_gate_pipe[N_SYNC_PIPE-1] && acq_gate_pipe[N_SYNC_PIPE-2]};   
+  assign resync_ctrl = {7'd0, !acq_gate_pipe[N_SYNC_PIPE-1] && acq_gate_pipe[N_SYNC_PIPE-2]};
+  //assign resync_ctrl = {7'd0, !acq_gate_pipe[N_SYNC_PIPE-2] && acq_gate};
+
+   
    
   always_ff @(posedge clk) begin
      if (rst == 1'b1) begin
 	
-       s_axis_phase_tlast  <= 1'b0;
-       s_axis_phase_tdata  <= 'd0;
-       s_axis_phase_tvalid <= 'd0;
+       //s_axis_phase_tlast  <= 1'b0;
+       s_axis_phase_tdata[63:0]  <= 'd0;
+       s_axis_phase_tvalid       <= 'd0;
 	
      end else begin
  
-       if (frame_a_pipe[N_SYNC_PIPE-1]) begin
+       //if (frame_a_pipe[N_SYNC_PIPE-1]) begin TODO, remove
+       if (frame_a) begin	  
 	  
          // s_axis_phase_tlast  <= acq_gate_pipe[N_SYNC_PIPE-1] && !acq_gate_pipe[N_SYNC_PIPE-2];
          // s_axis_phase_tdata  <= 'd0;
          // s_axis_phase_tvalid <= acq_gate_pipe[N_SYNC_PIPE-1];
-         s_axis_phase_tlast  <= 'd0;
-         s_axis_phase_tdata  <= 'd0;
-         s_axis_phase_tvalid <= 'd0;
+         s_axis_phase_tlast        <= 'd0;
+         s_axis_phase_tdata        <= 'd0;
+         s_axis_phase_tvalid       <= 'd0;
 	  
        end else begin
-         s_axis_phase_tlast  <= acq_gate_pipe[N_SYNC_PIPE-1] && !acq_gate_pipe[N_SYNC_PIPE-2];
+         //s_axis_phase_tlast  <= acq_gate_pipe[N_SYNC_PIPE-1] && !acq_gate_pipe[N_SYNC_PIPE-2];
+         s_axis_phase_tlast  <= acq_gate_pipe[0] && !acq_gate;	  
          s_axis_phase_tdata  <= {resync_ctrl, POFF_phase_offset_ctrl, PINC_phase_inc_ctrl};
-         s_axis_phase_tvalid <= acq_gate_pipe[N_SYNC_PIPE-1];
+         s_axis_phase_tvalid <= acq_gate_pipe[N_SYNC_PIPE-2];
        end
 	
      end
@@ -337,7 +348,8 @@ module chroma_tp #(
   logic sin_s2_to_s3_valid;
   logic cos_s2_to_s3_valid;
 
-  localparam integer N_PIPE = 3;
+  //localparam integer N_PIPE = 3 + 5;
+  localparam integer N_PIPE = 3;   
    
   logic [N_PIPE-1:0] pipe_valid = 'd0;
   logic [N_PIPE-1:0] pipe_tlast = 'd0;
@@ -391,6 +403,11 @@ module chroma_tp #(
   // Sign extend to 16 bit
   assign sine_tdata   = {sin_round_s3[13], sin_round_s3[13], sin_round_s3};
   assign cosine_tdata = {cos_round_s3[13], cos_round_s3[13], cos_round_s3};
+
+  assign sine_tvalid    = pipe_valid[N_PIPE-1];
+  assign cosine_tvalid  = pipe_valid[N_PIPE-1];
+  assign sine_tlast     = pipe_tlast[N_PIPE-1];
+  assign cosine_tlast   = pipe_tlast[N_PIPE-1];
    
   // Logging and Analysis
   initial begin: compile_time_check_initial
