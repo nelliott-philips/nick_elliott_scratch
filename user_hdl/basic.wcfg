@@ -12,13 +12,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="19,185.500 ns"></ZoomStartTime>
-      <ZoomEndTime time="19,655.001 ns"></ZoomEndTime>
-      <Cursor1Time time="19,495.000 ns"></Cursor1Time>
+      <ZoomStartTime time="19,212.567 ns"></ZoomStartTime>
+      <ZoomEndTime time="19,719.068 ns"></ZoomEndTime>
+      <Cursor1Time time="19,335.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="244"></NameColumnWidth>
-      <ValueColumnWidth column_width="93"></ValueColumnWidth>
+      <ValueColumnWidth column_width="89"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="59" />
    <wave_markers>
@@ -520,17 +520,13 @@
             <obj_property name="ObjectShortName">clk</obj_property>
          </wvobject>
          <wvobject fp_name="/chroma_tp_tb/ch_tp0/dds_pipe_tvalid" type="array">
-            <obj_property name="ElementShortName">dds_pipe_tvalid[15:0]</obj_property>
-            <obj_property name="ObjectShortName">dds_pipe_tvalid[15:0]</obj_property>
+            <obj_property name="ElementShortName">dds_pipe_tvalid[7:0]</obj_property>
+            <obj_property name="ObjectShortName">dds_pipe_tvalid[7:0]</obj_property>
             <obj_property name="Radix">HEXRADIX</obj_property>
          </wvobject>
-         <wvobject fp_name="/chroma_tp_tb/ch_tp0/dds_pipe_tvalid[15]" type="logic">
-            <obj_property name="ElementShortName">[15]</obj_property>
-            <obj_property name="ObjectShortName">[15]</obj_property>
-         </wvobject>
          <wvobject fp_name="/chroma_tp_tb/ch_tp0/mult_pipe_tvalid" type="array">
-            <obj_property name="ElementShortName">mult_pipe_tvalid[2:0]</obj_property>
-            <obj_property name="ObjectShortName">mult_pipe_tvalid[2:0]</obj_property>
+            <obj_property name="ElementShortName">mult_pipe_tvalid[9:0]</obj_property>
+            <obj_property name="ObjectShortName">mult_pipe_tvalid[9:0]</obj_property>
             <obj_property name="Radix">HEXRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/chroma_tp_tb/ch_tp0/mult_pipe_tvalid[2]" type="logic">

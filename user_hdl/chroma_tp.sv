@@ -41,13 +41,13 @@ module chroma_tp #(
   logic [ACQ_PIPE-1:0]      acq_gate_pipe;
 
   localparam integer	    DDS_PIPE = 8;  // IP core specifies 8 cycles minimum latency
-  //localparam integer	    DDS_PIPE_VAL = 8 + 8;  // IP core specifies 8 cycles minimum latency
-  localparam integer	    DDS_PIPE_VAL = 2;  // IP core specifies 8 cycles minimum latency      
+  localparam integer	    DDS_PIPE_VAL = 8;  // IP core specifies 8 cycles minimum latency
+  //localparam integer	    DDS_PIPE_VAL = 2;  // IP core specifies 8 cycles minimum latency      
   logic [DDS_PIPE_VAL-1:0]  dds_pipe_tvalid = 'd0;
   logic [DDS_PIPE-1:0]	    dds_pipe_tlast  = 'd0;
   
   localparam integer	    MULT_PIPE = 3;  // Multiply with rounding requires 3 cycles
-  localparam integer	    MULT_PIPE_VAL = 3+7;  // Multiply with rounding requires 3 cycles   
+  localparam integer	    MULT_PIPE_VAL = 3;  // Multiply with rounding requires 3 cycles   
   //logic [MULT_PIPE-1:0]     mult_pipe_tvalid = 'd0;
   logic [MULT_PIPE_VAL-1:0] mult_pipe_tvalid = 'd0;
   logic [MULT_PIPE-1:0]     mult_pipe_tlast  = 'd0;
@@ -203,15 +203,19 @@ module chroma_tp #(
 	
      end else begin
        if (ce_repeat) begin
-	  
-         a_scale     <= tp_arr[tp_gain_cnt];
+
+	 // Apply non-zero gain only in chromaflo acqu
+         a_scale <= 'd0;
+	 if (!frame_a && dds_pipe_tvalid[DDS_PIPE_VAL-1]) begin
+	   a_scale <= tp_arr[tp_gain_cnt];
+	 end
 
          // by default, unless valid is asserted from NCO, stay at starting index
          tp_gain_cnt <= N_GAIN_CNT-1;
 
 	 // if valid, increment (downward) through gain samples (TODO: in future add configurable increment)
 	 // if (m_axis_data_tvalid) begin TODO, rework
-	 if (dds_pipe_tvalid[DDS_PIPE_VAL-1]) begin	    
+	 if (dds_pipe_tvalid[DDS_PIPE_VAL-1]) begin
            tp_gain_cnt <= tp_gain_cnt - 1'b1;
 	 end
 
