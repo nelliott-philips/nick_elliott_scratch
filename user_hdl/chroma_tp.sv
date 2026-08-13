@@ -34,53 +34,64 @@ module chroma_tp #(
   localparam integer TP_GAIN_CNT_WIDTH = $clog2(N_GAIN_CNT);
   logic [TP_GAIN_CNT_WIDTH-1:0] tp_gain_cnt;
 
-  localparam integer		N_SYNC_PIPE = 2;
-  //logic [N_SYNC_PIPE-1:0]	framesync_pipe; // TODO, remove pipelining
-  logic [N_SYNC_PIPE-1:0]       acq_gate_pipe;
-  //logic [N_SYNC_PIPE-1:0]       frame_a_pipe;   // TODO, remove pipelining
 
-  /*
-  logic [11:0] tp_arr[N_GAIN_CNT] = {
-    400,400,400,400,400,
-    41C,41C,41C,41C,41C,
-    437,437,437,437,437,
- 454,454,454,454,454,
-    470,470,470,470,470,
-    48B,48B,48B,48B,48B,
-    4A7,4A7,4A7,4A7,4A7,
-    4C3,4C3,4C3,4C3,4C3,
-    4DE,4DE,4DE,4DE,4DE,
-    4FB,4FB,4FB,4FB,4FB,
-    517,517,517,517,517,
-    532,532,532,532,532,
-    54E,54E,54E,54E,54E,
-    569,569,569,569,569,
-    585,585,585,585,585,
-    5A2,5A2,5A2,5A2,5A2,
-    5BD,5BD,5BD,5BD,5BD,
-    5D9,5D9,5D9,5D9,5D9,
-    5F5,5F5,5F5,5F5,5F5,
-    610,610,610,610,610,
-    62C,62C,62C,62C,62C,
-    649,649,649,649,649,
-    664,664,664,664,664,
-    680,680,680,680,680,
-    69C,69C,69C,69C,69C,
-    6B7,6B7,6B7,6B7,6B7,
-    6D4,6D4,6D4,6D4,6D4,
-    6F0,6F0,6F0,6F0,6F0,
-    70B,70B,70B,70B,70B,
-    727,727,727,727,727,
-    743,743,743,743,743,
-    75E,75E,75E,75E,75E,
-    77B,77B,77B,77B,77B,
-    797,797,797,797,797,
-    7B2,7B2,7B2,7B2,7B2,
-    7CE,7CE,7CE,7CE,7CE,
-    7E9,7E9,7E9,7E9
-  };
+  // acq_gate --> |Z0| --> |Z1| --> DDS |Z2,Z9| --> MULT |Z10,Z12| --> 13 cycles of latency
+  //localparam integer	    ACQ_PIPE = 2;
+  localparam integer	    ACQ_PIPE = 2;   
+  logic [ACQ_PIPE-1:0]      acq_gate_pipe;
+
+  localparam integer	    DDS_PIPE = 8;  // IP core specifies 8 cycles minimum latency
+  //localparam integer	    DDS_PIPE_VAL = 8 + 8;  // IP core specifies 8 cycles minimum latency
+  localparam integer	    DDS_PIPE_VAL = 2;  // IP core specifies 8 cycles minimum latency      
+  logic [DDS_PIPE_VAL-1:0]  dds_pipe_tvalid = 'd0;
+  logic [DDS_PIPE-1:0]	    dds_pipe_tlast  = 'd0;
   
-  */
+  localparam integer	    MULT_PIPE = 3;  // Multiply with rounding requires 3 cycles
+  localparam integer	    MULT_PIPE_VAL = 3+7;  // Multiply with rounding requires 3 cycles   
+  //logic [MULT_PIPE-1:0]     mult_pipe_tvalid = 'd0;
+  logic [MULT_PIPE_VAL-1:0] mult_pipe_tvalid = 'd0;
+  logic [MULT_PIPE-1:0]     mult_pipe_tlast  = 'd0;
+
+  logic		            acq_gate_fe_tlast;
+  logic                     dds_resync_first_acq_valid;
+   
+  // acq_gate --> |Z0| --> |Z1| --> DDS |Z2,Z9| --> MULT |Z10,Z12| --> 13 cycles of latency   
+  assign acq_gate_fe_tlast           = !acq_gate_pipe[0] && acq_gate_pipe[1];
+  //assign acq_gate_fe_tlast           = !acq_gate_pipe[1] && acq_gate_pipe[2];
+  //assign acq_gate_fe_tlast           = !acq_gate && acq_gate_pipe[0];      
+   
+  // this signal resets the dds phase index to make each sequences repeatable and deterministic, 
+  // it should be applied on the first valid of an acq window (pipelined window)
+  assign dds_resync_first_acq_valid  = !acq_gate_pipe[ACQ_PIPE-1] && acq_gate_pipe[ACQ_PIPE-2]; 
+
+  always_ff @(posedge clk) begin
+    if (rst) begin
+       
+      acq_gate_pipe <= 'd0;
+       
+      dds_pipe_tvalid   <= 'd0;
+      dds_pipe_tlast    <= 'd0;
+
+      mult_pipe_tvalid  <= 'd0;
+      mult_pipe_tlast   <= 'd0;
+       
+    end else begin // if (rst)
+
+      // Capture 2 stages of acq_gate to align tlast with falling edge and valid with rising edge
+      acq_gate_pipe     <= {acq_gate_pipe[ACQ_PIPE-2:0], acq_gate};
+
+      // Feed acquistion into DDS latency pipeline, feed
+      dds_pipe_tvalid   <= {dds_pipe_tvalid[DDS_PIPE_VAL-2:0], acq_gate_pipe[ACQ_PIPE-1]};
+      dds_pipe_tlast    <= {dds_pipe_tlast[DDS_PIPE-2:0],  acq_gate_fe_tlast};
+
+      // Feed DDS pipelin into multiply stage pipeline
+      mult_pipe_tvalid  <= {mult_pipe_tvalid[MULT_PIPE_VAL-2:0], dds_pipe_tvalid[DDS_PIPE_VAL-1]};
+      mult_pipe_tlast   <= {mult_pipe_tlast[MULT_PIPE-2:0], dds_pipe_tlast[DDS_PIPE-1]};
+       
+    end
+  end
+   
+   
   
   logic [11:0] tp_arr[N_GAIN_CNT] = '{
     'h7E9,'h7E9,'h7E9,'h7E9,
@@ -144,9 +155,6 @@ module chroma_tp #(
   logic               sine_scaled_valid;
   logic               cosine_scaled_valid;
 
-   
-  assign data_tvalid = m_axis_phase_tvalid;
-  assign data_tdata  = m_axis_phase_tdata; 
   assign data_tlast  = m_axis_phase_tlast;
   assign sine        = m_axis_data_tdata[11:0];
   assign cosine      = m_axis_data_tdata[27:16];
@@ -160,11 +168,11 @@ module chroma_tp #(
 
   // Pipeline control inputs to maintain precise and instant synchronization of phase/frequency shifts
   // on frame/acquisition window boundaries
-  always_ff @(posedge clk) begin
-    // framesync_pipe <= {framesync_pipe[N_SYNC_PIPE-2:0], framesync};  todo, remove
-    acq_gate_pipe  <= {acq_gate_pipe[N_SYNC_PIPE-2:0], acq_gate};
-    // frame_a_pipe   <= {frame_a_pipe[N_SYNC_PIPE-2:0], frame_a}; todo, remove
-  end
+  // always_ff @(posedge clk) begin
+  //   // framesync_pipe <= {framesync_pipe[N_SYNC_PIPE-2:0], framesync};  todo, remove
+  //   acq_gate_pipe  <= {acq_gate_pipe[ACQ_PIPE-2:0], acq_gate};
+  //   // frame_a_pipe   <= {frame_a_pipe[N_SYNC_PIPE-2:0], frame_a}; todo, remove
+  // end
 
 
   // Use clock enable to repeat ROM/Distributed RAM values over multiple cycles
@@ -202,7 +210,8 @@ module chroma_tp #(
          tp_gain_cnt <= N_GAIN_CNT;
 
 	 // if valid, increment (downward) through gain samples (TODO: in future add configurable increment)
-	 if (m_axis_data_tvalid) begin
+	 // if (m_axis_data_tvalid) begin TODO, rework
+	 if (dds_pipe_tvalid[DDS_PIPE_VAL-1]) begin	    
            tp_gain_cnt <= tp_gain_cnt - 1'b1;
 	 end
 
@@ -227,7 +236,7 @@ module chroma_tp #(
     if (rst) begin
       
       // This is equivalent to negative 32'h3333_3333 which is the PINC, this should create a ~0 degree phase init state
-      //       POFF_phase_offset_ctrl <= 'd0;  TODO, remove
+      // POFF_phase_offset_ctrl <= 'd0;  TODO, remove
       POFF_phase_offset_ctrl <= 32'hCCCCCCCD; 
       accum_2x_aline_sync    <= 1'b0;
        
@@ -241,8 +250,9 @@ module chroma_tp #(
       end
       
       if (accum_2x_aline_sync) begin
+	 
         //POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl + 32'h0800_0000; // TODO
-         POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl; // keep the same for debug only
+        POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl; // keep the same for debug only
 	 
       end
        
@@ -255,40 +265,42 @@ module chroma_tp #(
   // Use pipelined acq_gate rising edge to restart (resync) initial phase index, this makes the test pattern deterministic
   // within the acquisition window, only the LSB is used as AXI Stream is byte aligned
   //assign resync_ctrl = {7'd0, !acq_gate_pipe[N_SYNC_PIPE-1] && acq_gate_pipe[N_SYNC_PIPE-2]};
-  assign resync_ctrl = {7'd0, !acq_gate_pipe[N_SYNC_PIPE-1] && acq_gate_pipe[N_SYNC_PIPE-2]};
+  //assign resync_ctrl = {7'd0, !acq_gate_pipe[N_SYNC_PIPE-1] && acq_gate_pipe[N_SYNC_PIPE-2]};
   //assign resync_ctrl = {7'd0, !acq_gate_pipe[N_SYNC_PIPE-2] && acq_gate};
 
    
    
-  always_ff @(posedge clk) begin
-     if (rst == 1'b1) begin
-	
-       //s_axis_phase_tlast  <= 1'b0;
-       s_axis_phase_tdata[63:0]  <= 'd0;
-       s_axis_phase_tvalid       <= 'd0;
-	
-     end else begin
- 
-       //if (frame_a_pipe[N_SYNC_PIPE-1]) begin TODO, remove
-       if (frame_a) begin	  
-	  
-         // s_axis_phase_tlast  <= acq_gate_pipe[N_SYNC_PIPE-1] && !acq_gate_pipe[N_SYNC_PIPE-2];
-         // s_axis_phase_tdata  <= 'd0;
-         // s_axis_phase_tvalid <= acq_gate_pipe[N_SYNC_PIPE-1];
-         s_axis_phase_tlast        <= 'd0;
-         s_axis_phase_tdata        <= 'd0;
-         s_axis_phase_tvalid       <= 'd0;
-	  
-       end else begin
-         //s_axis_phase_tlast  <= acq_gate_pipe[N_SYNC_PIPE-1] && !acq_gate_pipe[N_SYNC_PIPE-2];
-         s_axis_phase_tlast  <= acq_gate_pipe[0] && !acq_gate;	  
-         s_axis_phase_tdata  <= {resync_ctrl, POFF_phase_offset_ctrl, PINC_phase_inc_ctrl};
-         s_axis_phase_tvalid <= acq_gate_pipe[N_SYNC_PIPE-2];
-       end
-	
-     end
-  end
-
+  // always_ff @(posedge clk) begin
+  //    if (rst == 1'b1) begin
+  // 	
+  //      //s_axis_phase_tlast  <= 1'b0;
+  //      s_axis_phase_tdata  <= 'd0;
+  //      s_axis_phase_tvalid       <= 'd0;
+  // 	
+  //    end else begin
+  // 
+  //      //if (frame_a_pipe[N_SYNC_PIPE-1]) begin TODO, remove
+  //      if (frame_a) begin	  
+  // 	  
+  //        // s_axis_phase_tlast  <= acq_gate_pipe[N_SYNC_PIPE-1] && !acq_gate_pipe[N_SYNC_PIPE-2];
+  //        // s_axis_phase_tdata  <= 'd0;
+  //        // s_axis_phase_tvalid <= acq_gate_pipe[N_SYNC_PIPE-1];
+  //        s_axis_phase_tlast        <= 'd0;
+  //        s_axis_phase_tdata        <= 'd0;
+  //        s_axis_phase_tvalid       <= 'd0;
+  // 	  
+  //      end else begin
+  //        //s_axis_phase_tlast  <= acq_gate_pipe[N_SYNC_PIPE-1] && !acq_gate_pipe[N_SYNC_PIPE-2];
+  //        s_axis_phase_tlast  <= acq_gate_pipe[0] && !acq_gate;	  
+  //        s_axis_phase_tdata  <= {resync_ctrl, POFF_phase_offset_ctrl, PINC_phase_inc_ctrl};
+  //        s_axis_phase_tvalid <= acq_gate_pipe[N_SYNC_PIPE-2];
+  //      end
+  // 	
+  //    end
+  // end
+  // [71:64-> RESYNC, 63:32-> POFF (Phase offset), 31:0 PINC (Phase Increment)]
+  assign s_axis_phase_tdata = {7'd0, dds_resync_first_acq_valid, POFF_phase_offset_ctrl, PINC_phase_inc_ctrl};
+   
   // !!! The message below is stale or 'misinformed' pathing
   // You must compile the wrapper file dds_compiler_0.v when simulating
   // the core, dds_compiler_0. When compiling the wrapper file, be sure to
@@ -297,117 +309,121 @@ module chroma_tp #(
   //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
   dds_compiler_0 dds0 (
     .aclk                  (clk),                  // input wire aclk
-    .s_axis_phase_tvalid   (s_axis_phase_tvalid),  // input wire s_axis_phase_tvalid
+    //.s_axis_phase_tvalid   (s_axis_phase_tvalid),  // input wire s_axis_phase_tvalid TODO, rework
+    .s_axis_phase_tvalid   (1'b1),  // input wire s_axis_phase_tvalid		       
     .s_axis_phase_tdata    (s_axis_phase_tdata),   // input wire [71 : 0] s_axis_phase_tdata
-    .s_axis_phase_tlast    (s_axis_phase_tlast),   // input wire s_axis_phase_tlast
+    //.s_axis_phase_tlast    (s_axis_phase_tlast),   // input wire s_axis_phase_tlast
+    .s_axis_phase_tlast    (1'b0), // NOT implemented  // input wire s_axis_phase_tlast
     .m_axis_data_tvalid    (m_axis_data_tvalid),   // output wire m_axis_data_tvalid
     .m_axis_data_tdata     (m_axis_data_tdata),    // output wire [31 : 0] m_axis_data_tdata
     .m_axis_data_tlast     (m_axis_data_tlast),    // output wire m_axis_data_tlast
-    .m_axis_phase_tvalid   (m_axis_phase_tvalid),  // output wire m_axis_phase_tvalid
+    .m_axis_phase_tvalid   (m_axis_phase_tvalid),  // output wire m_axis_phase_tvalid  // NOT USED
     .m_axis_phase_tdata    (m_axis_phase_tdata),   // output wire [31 : 0] m_axis_phase_tdata
     .m_axis_phase_tlast    (m_axis_phase_tlast)    // output wire m_axis_phase_tlast
   );
   // INST_TAG_END ------ End INSTANTIATION Template ---------
 
 
-   logic [11:0] sin_mag_s2;
-   logic [11:0] cos_mag_s2;
-   logic	sin_has_frac_s2;
-   logic	cos_has_frac_s2;
-   logic	sin_is_neg_s2;
-   logic	cos_is_neg_s2;
-   logic [12:0] sin_rnd_mag_s3;
-   logic [12:0] cos_rnd_mag_s3;
-   logic [13:0] sin_round_s3;
-   logic [13:0] cos_round_s3;
+   logic [11:0] sin_mag_s1;
+   logic [11:0] cos_mag_s1;
+   logic	sin_has_frac_s1;
+   logic	cos_has_frac_s1;
+   logic	sin_is_neg_s1;
+   logic	cos_is_neg_s1;
+   logic [12:0] sin_rnd_mag_s2;
+   logic [12:0] cos_rnd_mag_s2;
+   logic [13:0] sin_round_s2;
+   logic [13:0] cos_round_s2;
 
 
-   logic signed [23:0]	sine_prod_s1;
-   logic signed [23:0]	cosine_prod_s1;
-   logic		sine_prod_valid_s1;
-   logic		cosine_prod_valid_s1;
+   logic signed [23:0]	sine_prod_s0;
+   logic signed [23:0]	cosine_prod_s0;
+   logic		sine_prod_valid_s0;
+   logic		cosine_prod_valid_s0;
    
   // Multiply block
   always @(posedge clk) begin
     if (rst) begin
-      sine_prod_s1          <= 'd0;
-      cosine_prod_s1        <= 'd0;
+      sine_prod_s0   <= 'd0;
+      cosine_prod_s0 <= 'd0;
       //sine_prod_valid_s1    <= 'd0;  TODO
       //cosine_prod_valid_s1  <= 'd0;  TODO
     end else begin
-      sine_prod_s1          <= a_scale*sine;
-      cosine_prod_s1        <= a_scale*cosine;
+      sine_prod_s0   <= a_scale*sine;
+      cosine_prod_s0 <= a_scale*cosine;
       //sine_prod_valid_s1    <= m_axis_data_tvalid; TODO
       //cosine_prod_valid_s1  <= m_axis_data_tvalid; TODO
     end
   end // else: !if(rst)
 
+  logic sin_s0_to_s1_valid;
+  logic cos_s0_to_s1_valid;
+
   logic sin_s1_to_s2_valid;
   logic cos_s1_to_s2_valid;
 
-  logic sin_s2_to_s3_valid;
-  logic cos_s2_to_s3_valid;
-
-  //localparam integer N_PIPE = 3 + 5;
-  localparam integer N_PIPE = 3;   
-   
-  logic [N_PIPE-1:0] pipe_valid = 'd0;
-  logic [N_PIPE-1:0] pipe_tlast = 'd0;
+  // logic [N_PIPE-1:0] pipe_valid = 'd0;  TODO, REMOVE
+  // logic [N_PIPE-1:0] pipe_tlast = 'd0;  TODO, REMOVE
   
   // Pipelined signed multiply using operands from input A: NCO (Numerically Controlled Oscillator
   // and input B: a_scale coefficient, each is 12 bit signed, output is the upper 12 bits of 24bit prod
   always @(posedge clk) begin
 
-    pipe_valid <= {pipe_valid[N_PIPE-2:0], m_axis_data_tvalid};
-    pipe_tlast <= {pipe_tlast[N_PIPE-2:0], m_axis_phase_tlast};
+    // pipe_valid <= {pipe_valid[N_PIPE-2:0], m_axis_data_tvalid};
+    // pipe_tlast <= {pipe_tlast[N_PIPE-2:0], m_axis_phase_tlast};
 
     //////  Stage 1 S1 -> S2     
     // Capture magnitude and presence of fractional bits for rounding in next pipeline stage
-    if (sine_prod_s1[23]) begin
-      sin_has_frac_s2 <= |sine_prod_s1[11:0];
-      sin_mag_s2   <= $unsigned(-sine_prod_s1) >> 12;
+    if (sine_prod_s0[23]) begin
+      sin_has_frac_s1 <= |sine_prod_s0[11:0];
+      sin_mag_s1      <= $unsigned(-sine_prod_s0) >> 12;
     end else begin
-      sin_has_frac_s2 <= |sine_prod_s1[11:0];
-      sin_mag_s2   <= $unsigned(sine_prod_s1)  >> 12;     
+      sin_has_frac_s1 <= |sine_prod_s0[11:0];
+      sin_mag_s1      <= $unsigned(sine_prod_s0)  >> 12;     
     end
 
     // Cosine product block
-    if (cosine_prod_s1[23]) begin
-      cos_has_frac_s2 <= |cosine_prod_s1[11:0];
-      cos_mag_s2   <= $unsigned(-cosine_prod_s1) >> 12;
+    if (cosine_prod_s0[23]) begin
+      cos_has_frac_s1 <= |cosine_prod_s0[11:0];
+      cos_mag_s1      <= $unsigned(-cosine_prod_s0) >> 12;
     end else begin    
-      cos_has_frac_s2 <= |cosine_prod_s1[11:0];
-      cos_mag_s2   <= $unsigned(cosine_prod_s1)  >> 12;
+      cos_has_frac_s1 <= |cosine_prod_s0[11:0];
+      cos_mag_s1      <= $unsigned(cosine_prod_s0)  >> 12;
     end
 
-    sin_is_neg_s2 <= sine_prod_s1[23];
-    cos_is_neg_s2 <= cosine_prod_s1[23];
+    sin_is_neg_s1 <= sine_prod_s0[23];
+    cos_is_neg_s1 <= cosine_prod_s0[23];
 
     //////  Stage 2 S2 -> S3     
     // Round based on presence of fractional bits in 12 LSBs, round symmetrically toward infinity
     // S2 -> S3
-    if (sin_is_neg_s2) begin
-      sin_round_s3 <= -$signed({1'b0, ({1'b0, sin_mag_s2} + sin_has_frac_s2)});
+    if (sin_is_neg_s1) begin
+      sin_round_s2 <= -$signed({1'b0, ({1'b0, sin_mag_s1} + sin_has_frac_s1)});
     end else begin
-      sin_round_s3 <= $signed({1'b0, ({1'b0, sin_mag_s2} + sin_has_frac_s2)});       
+      sin_round_s2 <= $signed({1'b0, ({1'b0, sin_mag_s1} + sin_has_frac_s1)});       
     end
 
-    if (cos_is_neg_s2) begin
-      cos_round_s3 <= -$signed({1'b0, ({1'b0, cos_mag_s2} + cos_has_frac_s2)});
+    if (cos_is_neg_s1) begin
+      cos_round_s2 <= -$signed({1'b0, ({1'b0, cos_mag_s1} + cos_has_frac_s1)});
     end else begin
-      cos_round_s3 <= $signed({1'b0, ({1'b0, cos_mag_s2} + cos_has_frac_s2)});       
+      cos_round_s2 <= $signed({1'b0, ({1'b0, cos_mag_s1} + cos_has_frac_s1)});
     end
 		     
   end
 
   // Sign extend to 16 bit
-  assign sine_tdata   = {sin_round_s3[13], sin_round_s3[13], sin_round_s3};
-  assign cosine_tdata = {cos_round_s3[13], cos_round_s3[13], cos_round_s3};
+  assign sine_tdata     = {sin_round_s2[13], sin_round_s2[13], sin_round_s2};
+  assign cosine_tdata   = {cos_round_s2[13], cos_round_s2[13], cos_round_s2};
 
-  assign sine_tvalid    = pipe_valid[N_PIPE-1];
-  assign cosine_tvalid  = pipe_valid[N_PIPE-1];
-  assign sine_tlast     = pipe_tlast[N_PIPE-1];
-  assign cosine_tlast   = pipe_tlast[N_PIPE-1];
+  // assign sine_tvalid    = pipe_valid[N_PIPE-1];  TODO, REMOVE
+  // assign cosine_tvalid  = pipe_valid[N_PIPE-1];  TODO, REMOVE
+  // assign sine_tlast     = pipe_tlast[N_PIPE-1];  TODO, REMOVE
+  // assign cosine_tlast   = pipe_tlast[N_PIPE-1];  TODO, REMOVE
+
+  assign sine_tvalid    = mult_pipe_tvalid[MULT_PIPE_VAL-1];
+  assign cosine_tvalid  = mult_pipe_tvalid[MULT_PIPE_VAL-1];
+  assign sine_tlast     = mult_pipe_tlast[MULT_PIPE-1];
+  assign cosine_tlast   = mult_pipe_tlast[MULT_PIPE-1];
    
   // Logging and Analysis
   initial begin: compile_time_check_initial
@@ -691,3 +707,46 @@ endmodule // chroma_tp
   // 192.4      0.961914    1970      7B2
   // 195.1      0.975586    1998      7CE
   // 197.8      0.988770    2025      7E9
+
+  /*
+  logic [11:0] tp_arr[N_GAIN_CNT] = {
+    400,400,400,400,400,
+    41C,41C,41C,41C,41C,
+    437,437,437,437,437,
+ 454,454,454,454,454,
+    470,470,470,470,470,
+    48B,48B,48B,48B,48B,
+    4A7,4A7,4A7,4A7,4A7,
+    4C3,4C3,4C3,4C3,4C3,
+    4DE,4DE,4DE,4DE,4DE,
+    4FB,4FB,4FB,4FB,4FB,
+    517,517,517,517,517,
+    532,532,532,532,532,
+    54E,54E,54E,54E,54E,
+    569,569,569,569,569,
+    585,585,585,585,585,
+    5A2,5A2,5A2,5A2,5A2,
+    5BD,5BD,5BD,5BD,5BD,
+    5D9,5D9,5D9,5D9,5D9,
+    5F5,5F5,5F5,5F5,5F5,
+    610,610,610,610,610,
+    62C,62C,62C,62C,62C,
+    649,649,649,649,649,
+    664,664,664,664,664,
+    680,680,680,680,680,
+    69C,69C,69C,69C,69C,
+    6B7,6B7,6B7,6B7,6B7,
+    6D4,6D4,6D4,6D4,6D4,
+    6F0,6F0,6F0,6F0,6F0,
+    70B,70B,70B,70B,70B,
+    727,727,727,727,727,
+    743,743,743,743,743,
+    75E,75E,75E,75E,75E,
+    77B,77B,77B,77B,77B,
+    797,797,797,797,797,
+    7B2,7B2,7B2,7B2,7B2,
+    7CE,7CE,7CE,7CE,7CE,
+    7E9,7E9,7E9,7E9
+  };
+  
+  */
