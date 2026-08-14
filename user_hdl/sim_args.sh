@@ -64,7 +64,8 @@ function cmp_tp()
   xvhdl.bat \
   chroma_tp/chroma_tp/chroma_tp.gen/sources_1/ip/dds_compiler_0/sim/dds_compiler_0.vhd
   
-  xvlog.bat -sv chroma_tp.sv
+  # xvlog.bat -sv chroma_tp.sv
+  xvlog.bat -sv chroma_tp_simple.sv  
   xvlog.bat -sv chroma_tp_tb.sv
   xvlog.bat -sv chroma_tp_tc.sv
 

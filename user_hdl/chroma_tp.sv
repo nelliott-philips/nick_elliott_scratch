@@ -55,43 +55,6 @@ module chroma_tp #(
   logic		            acq_gate_fe_tlast;
   logic                     dds_resync_first_acq_valid;
    
-  // acq_gate --> |Z0| --> |Z1| --> DDS |Z2,Z9| --> MULT |Z10,Z12| --> 13 cycles of latency   
-  assign acq_gate_fe_tlast           = !acq_gate_pipe[0] && acq_gate_pipe[1];
-  //assign acq_gate_fe_tlast           = !acq_gate_pipe[1] && acq_gate_pipe[2];
-  //assign acq_gate_fe_tlast           = !acq_gate && acq_gate_pipe[0];      
-   
-  // this signal resets the dds phase index to make each sequences repeatable and deterministic, 
-  // it should be applied on the first valid of an acq window (pipelined window)
-  assign dds_resync_first_acq_valid  = !acq_gate_pipe[ACQ_PIPE-1] && acq_gate_pipe[ACQ_PIPE-2]; 
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-       
-      acq_gate_pipe <= 'd0;
-       
-      dds_pipe_tvalid   <= 'd0;
-      dds_pipe_tlast    <= 'd0;
-
-      mult_pipe_tvalid  <= 'd0;
-      mult_pipe_tlast   <= 'd0;
-       
-    end else begin // if (rst)
-
-      // Capture 2 stages of acq_gate to align tlast with falling edge and valid with rising edge
-      acq_gate_pipe     <= {acq_gate_pipe[ACQ_PIPE-2:0], acq_gate};
-
-      // Feed acquistion into DDS latency pipeline, feed
-      dds_pipe_tvalid   <= {dds_pipe_tvalid[DDS_PIPE_VAL-2:0], acq_gate_pipe[ACQ_PIPE-1]};
-      dds_pipe_tlast    <= {dds_pipe_tlast[DDS_PIPE-2:0],  acq_gate_fe_tlast};
-
-      // Feed DDS pipelin into multiply stage pipeline
-      mult_pipe_tvalid  <= {mult_pipe_tvalid[MULT_PIPE_VAL-2:0], dds_pipe_tvalid[DDS_PIPE_VAL-1]};
-      mult_pipe_tlast   <= {mult_pipe_tlast[MULT_PIPE-2:0], dds_pipe_tlast[DDS_PIPE-1]};
-       
-    end
-  end
-   
-   
   
   logic [11:0] tp_arr[N_GAIN_CNT] = '{
     'h7E9,'h7E9,'h7E9,'h7E9,
@@ -132,7 +95,6 @@ module chroma_tp #(
     'h41C,'h41C,'h41C,'h41C,'h41C,
     'h400,'h400,'h400,'h400,'h400
   };
-   
 
   // Inputs
   logic        s_axis_phase_tvalid;
@@ -174,6 +136,43 @@ module chroma_tp #(
   //   // frame_a_pipe   <= {frame_a_pipe[N_SYNC_PIPE-2:0], frame_a}; todo, remove
   // end
 
+
+  // acq_gate --> |Z0| --> |Z1| --> DDS |Z2,Z9| --> MULT |Z10,Z12| --> 13 cycles of latency   
+  assign acq_gate_fe_tlast           = !acq_gate_pipe[0] && acq_gate_pipe[1];
+  //assign acq_gate_fe_tlast           = !acq_gate_pipe[1] && acq_gate_pipe[2];
+  //assign acq_gate_fe_tlast           = !acq_gate && acq_gate_pipe[0];      
+   
+  // this signal resets the dds phase index to make each sequences repeatable and deterministic, 
+  // it should be applied on the first valid of an acq window (pipelined window)
+  assign dds_resync_first_acq_valid  = !acq_gate_pipe[ACQ_PIPE-1] && acq_gate_pipe[ACQ_PIPE-2]; 
+
+  always_ff @(posedge clk) begin
+    if (rst) begin
+       
+      acq_gate_pipe <= 'd0;
+       
+      dds_pipe_tvalid   <= 'd0;
+      dds_pipe_tlast    <= 'd0;
+
+      mult_pipe_tvalid  <= 'd0;
+      mult_pipe_tlast   <= 'd0;
+       
+    end else begin // if (rst)
+
+      // Capture 2 stages of acq_gate to align tlast with falling edge and valid with rising edge
+      acq_gate_pipe     <= {acq_gate_pipe[ACQ_PIPE-2:0], acq_gate};
+
+      // Feed acquistion into DDS latency pipeline, feed
+      dds_pipe_tvalid   <= {dds_pipe_tvalid[DDS_PIPE_VAL-2:0], acq_gate_pipe[ACQ_PIPE-1]};
+      dds_pipe_tlast    <= {dds_pipe_tlast[DDS_PIPE-2:0],  acq_gate_fe_tlast};
+
+      // Feed DDS pipelin into multiply stage pipeline
+      mult_pipe_tvalid  <= {mult_pipe_tvalid[MULT_PIPE_VAL-2:0], dds_pipe_tvalid[DDS_PIPE_VAL-1]};
+      mult_pipe_tlast   <= {mult_pipe_tlast[MULT_PIPE-2:0], dds_pipe_tlast[DDS_PIPE-1]};
+       
+    end
+  end
+   
 
   // Use clock enable to repeat ROM/Distributed RAM values over multiple cycles
   // set CE_REPEAT_CNT to 1 to read out ROM values each cycle
@@ -241,7 +240,8 @@ module chroma_tp #(
       
       // This is equivalent to negative 32'h3333_3333 which is the PINC, this should create a ~0 degree phase init state
       // POFF_phase_offset_ctrl <= 'd0;  TODO, remove
-      POFF_phase_offset_ctrl <= 32'hCCCCCCCD; 
+      //POFF_phase_offset_ctrl <= 32'hCCCCCCCD;
+      POFF_phase_offset_ctrl <= 32'd0;
       accum_2x_aline_sync    <= 1'b0;
        
     end else begin
@@ -256,7 +256,14 @@ module chroma_tp #(
       if (accum_2x_aline_sync) begin
 	 
         //POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl + 32'h0800_0000; // TODO
-        POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl; // keep the same for debug only
+        //POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl + 32'h0400_0000; // TODO
+        //POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl + 32'h0600_0000; // TODO
+        //POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl + 32'h0700_0000; // TODO
+        POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl + 32'h07E8_0000;
+	 
+; // TODO
+
+        //POFF_phase_offset_ctrl <= POFF_phase_offset_ctrl; // keep the same for debug only
 	 
       end
        
@@ -440,10 +447,7 @@ module chroma_tp #(
 
 endmodule // chroma_tp
 
-
-
 /*
-
   400,400,400,400,400,
   41C,41C,41C,41C,41C,
   437,437,437,437,437,
@@ -481,8 +485,6 @@ endmodule // chroma_tp
   7B2,7B2,7B2,7B2,7B2,
   7CE,7CE,7CE,7CE,7CE,
   7E9,7E9,7E9,7E9;
-
- 
 */ 
  
 
@@ -717,7 +719,7 @@ endmodule // chroma_tp
     400,400,400,400,400,
     41C,41C,41C,41C,41C,
     437,437,437,437,437,
- 454,454,454,454,454,
+    454,454,454,454,454,
     470,470,470,470,470,
     48B,48B,48B,48B,48B,
     4A7,4A7,4A7,4A7,4A7,

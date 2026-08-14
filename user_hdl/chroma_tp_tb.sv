@@ -19,8 +19,8 @@ module chroma_tp_tb();
   logic         framesync;
   logic         frame_a;
 
-   
-  chroma_tp ch_tp0(
+  //chroma_tp ch_tp0(   
+  chroma_tp_simple ch_tp0(
     .clk             (clk),
     .rst             (rst),
     .framesync       (framesync),
