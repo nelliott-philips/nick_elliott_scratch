@@ -13,14 +13,14 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000000 us"></ZoomStartTime>
-      <ZoomEndTime time="9.550001 us"></ZoomEndTime>
-      <Cursor1Time time="61.735000 us"></Cursor1Time>
+      <ZoomEndTime time="2,396.000001 us"></ZoomEndTime>
+      <Cursor1Time time="405.000000 us"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="244"></NameColumnWidth>
-      <ValueColumnWidth column_width="77"></ValueColumnWidth>
+      <NameColumnWidth column_width="177"></NameColumnWidth>
+      <ValueColumnWidth column_width="136"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="59" />
+   <WVObjectSize size="46" />
    <wave_markers>
       <marker time="18115000" label="" />
    </wave_markers>
@@ -39,60 +39,6 @@
    <wvobject fp_name="/chroma_tp_tb/ch_tp0/gpo_reg_out" type="array">
       <obj_property name="ElementShortName">gpo_reg_out[31:0]</obj_property>
       <obj_property name="ObjectShortName">gpo_reg_out[31:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/data_tlast" type="logic">
-      <obj_property name="ElementShortName">data_tlast</obj_property>
-      <obj_property name="ObjectShortName">data_tlast</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tvalid" type="logic">
-      <obj_property name="ElementShortName">s_axis_phase_tvalid</obj_property>
-      <obj_property name="ObjectShortName">s_axis_phase_tvalid</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tdata" type="array">
-      <obj_property name="ElementShortName">s_axis_phase_tdata[71:0]</obj_property>
-      <obj_property name="ObjectShortName">s_axis_phase_tdata[71:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tlast" type="logic">
-      <obj_property name="ElementShortName">s_axis_phase_tlast</obj_property>
-      <obj_property name="ObjectShortName">s_axis_phase_tlast</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tvalid" type="logic">
-      <obj_property name="ElementShortName">m_axis_data_tvalid</obj_property>
-      <obj_property name="ObjectShortName">m_axis_data_tvalid</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tdata" type="array">
-      <obj_property name="ElementShortName">m_axis_data_tdata[31:0]</obj_property>
-      <obj_property name="ObjectShortName">m_axis_data_tdata[31:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tdata" type="array">
-      <obj_property name="ElementShortName">m_axis_data_tdata[31:0]</obj_property>
-      <obj_property name="ObjectShortName">m_axis_data_tdata[31:0]</obj_property>
-      <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
-      <obj_property name="CellHeight">100</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tlast" type="logic">
-      <obj_property name="ElementShortName">m_axis_data_tlast</obj_property>
-      <obj_property name="ObjectShortName">m_axis_data_tlast</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_phase_tvalid" type="logic">
-      <obj_property name="ElementShortName">m_axis_phase_tvalid</obj_property>
-      <obj_property name="ObjectShortName">m_axis_phase_tvalid</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_phase_tdata" type="array">
-      <obj_property name="ElementShortName">m_axis_phase_tdata[31:0]</obj_property>
-      <obj_property name="ObjectShortName">m_axis_phase_tdata[31:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_phase_tdata" type="array">
-      <obj_property name="ElementShortName">m_axis_phase_tdata[31:0]</obj_property>
-      <obj_property name="ObjectShortName">m_axis_phase_tdata[31:0]</obj_property>
-      <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
-      <obj_property name="CellHeight">100</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_phase_tlast" type="logic">
-      <obj_property name="ElementShortName">m_axis_phase_tlast</obj_property>
-      <obj_property name="ObjectShortName">m_axis_phase_tlast</obj_property>
    </wvobject>
    <wvobject fp_name="/chroma_tp_tb/ch_tp0/sine" type="array">
       <obj_property name="ElementShortName">sine[11:0]</obj_property>
@@ -314,38 +260,10 @@
          <obj_property name="ElementShortName">clk</obj_property>
          <obj_property name="ObjectShortName">clk</obj_property>
       </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tdata" type="array">
-         <obj_property name="ElementShortName">s_axis_phase_tdata[71:0]</obj_property>
-         <obj_property name="ObjectShortName">s_axis_phase_tdata[71:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tvalid" type="logic">
-         <obj_property name="ElementShortName">m_axis_data_tvalid</obj_property>
-         <obj_property name="ObjectShortName">m_axis_data_tvalid</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tlast" type="logic">
-         <obj_property name="ElementShortName">s_axis_phase_tlast</obj_property>
-         <obj_property name="ObjectShortName">s_axis_phase_tlast</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/resync_ctrl" type="array">
-         <obj_property name="ElementShortName">resync_ctrl[7:0]</obj_property>
-         <obj_property name="ObjectShortName">resync_ctrl[7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/POFF_phase_offset_ctrl" type="array">
-         <obj_property name="ElementShortName">POFF_phase_offset_ctrl[31:0]</obj_property>
-         <obj_property name="ObjectShortName">POFF_phase_offset_ctrl[31:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/PINC_phase_inc_ctrl" type="array">
-         <obj_property name="ElementShortName">PINC_phase_inc_ctrl[31:0]</obj_property>
-         <obj_property name="ObjectShortName">PINC_phase_inc_ctrl[31:0]</obj_property>
-      </wvobject>
    </wvobject>
    <wvobject fp_name="/chroma_tp_tb/ch_tp0/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
-   </wvobject>
-   <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tvalid" type="logic">
-      <obj_property name="ElementShortName">m_axis_data_tvalid</obj_property>
-      <obj_property name="ObjectShortName">m_axis_data_tvalid</obj_property>
    </wvobject>
    <wvobject type="divider" fp_name="divider100">
       <obj_property name="label">TOP</obj_property>
@@ -390,38 +308,6 @@
       <wvobject fp_name="/chroma_tp_tb/clk" type="logic">
          <obj_property name="ElementShortName">clk</obj_property>
          <obj_property name="ObjectShortName">clk</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tvalid" type="logic">
-         <obj_property name="ElementShortName">s_axis_phase_tvalid</obj_property>
-         <obj_property name="ObjectShortName">s_axis_phase_tvalid</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tlast" type="logic">
-         <obj_property name="ElementShortName">m_axis_data_tlast</obj_property>
-         <obj_property name="ObjectShortName">m_axis_data_tlast</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tvalid" type="logic">
-         <obj_property name="ElementShortName">m_axis_data_tvalid</obj_property>
-         <obj_property name="ObjectShortName">m_axis_data_tvalid</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_phase_tlast" type="logic">
-         <obj_property name="ElementShortName">m_axis_phase_tlast</obj_property>
-         <obj_property name="ObjectShortName">m_axis_phase_tlast</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tlast" type="logic">
-         <obj_property name="ElementShortName">s_axis_phase_tlast</obj_property>
-         <obj_property name="ObjectShortName">s_axis_phase_tlast</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/resync_ctrl" type="array">
-         <obj_property name="ElementShortName">resync_ctrl[7:0]</obj_property>
-         <obj_property name="ObjectShortName">resync_ctrl[7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tdata[64]" type="logic">
-         <obj_property name="ElementShortName">[64]</obj_property>
-         <obj_property name="ObjectShortName">[64]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/chroma_tp_tb/ch_tp0/m_axis_data_tvalid" type="logic">
-         <obj_property name="ElementShortName">m_axis_data_tvalid</obj_property>
-         <obj_property name="ObjectShortName">m_axis_data_tvalid</obj_property>
       </wvobject>
       <wvobject fp_name="/chroma_tp_tb/sine_tvalid" type="logic">
          <obj_property name="ElementShortName">sine_tvalid</obj_property>
@@ -503,10 +389,6 @@
             <obj_property name="ElementShortName">acq_gate</obj_property>
             <obj_property name="ObjectShortName">acq_gate</obj_property>
          </wvobject>
-         <wvobject fp_name="/chroma_tp_tb/ch_tp0/s_axis_phase_tdata[64]" type="logic">
-            <obj_property name="ElementShortName">[64]</obj_property>
-            <obj_property name="ObjectShortName">[64]</obj_property>
-         </wvobject>
          <wvobject fp_name="/chroma_tp_tb/cf_enable" type="logic">
             <obj_property name="ElementShortName">cf_enable</obj_property>
             <obj_property name="ObjectShortName">cf_enable</obj_property>
@@ -522,11 +404,6 @@
          <wvobject fp_name="/chroma_tp_tb/ch_tp0/frame_a" type="logic">
             <obj_property name="ElementShortName">frame_a</obj_property>
             <obj_property name="ObjectShortName">frame_a</obj_property>
-         </wvobject>
-         <wvobject fp_name="/chroma_tp_tb/ch_tp0/dds_pipe_tvalid" type="array">
-            <obj_property name="ElementShortName">dds_pipe_tvalid[7:0]</obj_property>
-            <obj_property name="ObjectShortName">dds_pipe_tvalid[7:0]</obj_property>
-            <obj_property name="Radix">HEXRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/chroma_tp_tb/ch_tp0/mult_pipe_tvalid" type="array">
             <obj_property name="ElementShortName">mult_pipe_tvalid[2:0]</obj_property>
@@ -567,6 +444,11 @@
          <wvobject fp_name="/chroma_tp_tb/ch_tp0/accum_2x_aline_sync" type="logic">
             <obj_property name="ElementShortName">accum_2x_aline_sync</obj_property>
             <obj_property name="ObjectShortName">accum_2x_aline_sync</obj_property>
+         </wvobject>
+         <wvobject fp_name="/chroma_tp_tb/ch_tp0/phase_idx" type="array">
+            <obj_property name="ElementShortName">phase_idx[4:0]</obj_property>
+            <obj_property name="ObjectShortName">phase_idx[4:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/chroma_tp_tb/cosine_tdata" type="array">
             <obj_property name="ElementShortName">cosine_tdata[15:0]</obj_property>

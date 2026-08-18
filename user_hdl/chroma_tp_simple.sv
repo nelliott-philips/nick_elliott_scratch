@@ -58,9 +58,11 @@ module chroma_tp_simple #(
 
   logic [TP_GAIN_CNT_WIDTH-1:0] tp_gain_cnt;
 
+  
+
   // Gain coefficients from the original chroma_tp.sv.
   logic [11:0] tp_arr [0:N_GAIN_CNT-1] = '{
-12'h7E9,12'h7E9,12'h7E9,12'h7E9,
+    12'h7E9,12'h7E9,12'h7E9,12'h7E9,
     12'h7CE,12'h7CE,12'h7CE,12'h7CE,12'h7CE,
     12'h7B2,12'h7B2,12'h7B2,12'h7B2,12'h7B2,
     12'h797,12'h797,12'h797,12'h797,12'h797,
@@ -244,11 +246,14 @@ module chroma_tp_simple #(
       accum_2x_aline_sync <= 1'b0;
       phase_idx           <= '0;
     end else if (framesync && frame_a) begin
+       accum_2x_aline_sync <= 1'b0;
+    end else if (!frame_a && cosine_tlast) begin
       accum_2x_aline_sync <= ~accum_2x_aline_sync;
-
+				
       if (accum_2x_aline_sync) begin
         phase_idx <= phase_idx + 1'b1;
       end
+       
     end
   end
 
@@ -321,9 +326,11 @@ module chroma_tp_simple #(
         tp_gain_cnt <= tp_gain_cnt - 1'b1;
       end
 
-      if (tp_gain_cnt == '0 || framesync) begin
+      // Restart count when count is down to zero or if end of acquisition window packet
+      if (tp_gain_cnt == '0 || cosine_tlast) begin
         tp_gain_cnt <= N_GAIN_CNT-1;
       end
+       
     end
   end
 
@@ -386,13 +393,96 @@ module chroma_tp_simple #(
   end
 
   // Sign extend the 14-bit rounded values to the existing 16-bit interface.
-  assign sine_tdata   = {{2{sin_round_s2[13]}}, sin_round_s2};
-  assign cosine_tdata = {{2{cos_round_s2[13]}}, cos_round_s2};
+  // assign sine_tdata   = {{2{sin_round_s2[13]}}, sin_round_s2};
+  // assign cosine_tdata = {{2{cos_round_s2[13]}}, cos_round_s2};
+  assign sine_tdata   = {sin_round_s2, 2'b00};
+  assign cosine_tdata = {cos_round_s2, 2'b00};
 
   assign sine_tvalid   = mult_pipe_tvalid[MULT_PIPE-1];
   assign cosine_tvalid = mult_pipe_tvalid[MULT_PIPE-1];
   assign sine_tlast    = mult_pipe_tlast[MULT_PIPE-1];
   assign cosine_tlast  = mult_pipe_tlast[MULT_PIPE-1];
+
+  generate
+    if (HW_DEBUG_ON) begin: gen_hw_debug
+
+       localparam integer MAX_ALINE_FRAME_SIZE = 20_000; // Don't know actual figure, TODO
+       localparam integer MAX_ACQ_WINDOW_SIZE  = 6000;   // I believe largest window is 4000, TODO
+
+       localparam integer N_ALINE_FRM   = 128;
+       localparam integer N_ALINE_WIDTH = $clog2(N_ALINE_FRM);
+       
+       (*mark_debug = "true"*) logic [N_ALINE_WIDTH-1:0]                aline_frm_cnt   = 'd0;
+       (*mark_debug = "true"*) logic [$clog2(MAX_ALINE_FRAME_SIZE)-1:0]	aline_width_cnt = 'd0;
+       (*mark_debug = "true"*) logic [$clog2(MAX_ACQ_WINDOW_SIZE)-1:0]	acq_width_cnt   = 'd0;
+
+       (*mark_debug = "true"*) logic tlast_920_flag;
+       (*mark_debug = "true"*) logic rst_mon;
+       (*mark_debug = "true"*) logic framesync_mon;
+       (*mark_debug = "true"*) logic accum_2x_aline_sync_mon;
+       (*mark_debug = "true"*) logic frame_a_mon;
+       
+       (*mark_debug = "true"*) logic [15:0]                 cosine_tdata_mon;
+       (*mark_debug = "true"*) logic                        cosine_tlast_mon;
+       (*mark_debug = "true"*) logic                        cosine_tvalid_mon;
+       (*mark_debug = "true"*) logic                        acq_gate_mon;
+       (*mark_debug = "true"*) logic                        test_pattern_en_mon;
+       (*mark_debug = "true"*) logic                        cf_enable_mon;
+       (*mark_debug = "true"*) logic [PHASE_IDX_WIDTH-1:0]  phase_idx_mon;
+       (*mark_debug = "true"*) logic [SAMPLE_IDX_WIDTH-1:0] sample_idx_mon;
+       (*mark_debug = "true"*) logic [7:0]                  cosine_lut_addr_mon;       
+       
+
+       assign cosine_tdata_mon        = cosine_tdata;
+       assign cosine_tlast_mon        = cosine_tlast;
+       assign cosine_tvalid_mon       = cosine_tvalid;
+       assign acq_gate_mon            = acq_gate;
+       assign test_pattern_en_mon     = test_pattern_en;
+       
+       assign rst_mon                 = rst;
+       assign framesync_mon           = framesync;
+       assign accum_2x_aline_sync_mon = accum_2x_aline_sync;
+       assign frame_a_mon             = frame_a;
+       assign cf_enable_mon           = cf_enable;
+       assign phase_idx_mon           = phase_idx;
+       assign sample_idx_mon          = sample_idx;
+       assign cosine_lut_addr_mon     = cosine_lut_addr;
+
+       always_ff @(posedge clk) begin
+         if (rst) begin
+	    
+           tlast_920_flag    <= 'd0;
+           aline_width_cnt   <= 'd0;
+	   acq_width_cnt     <= 'd0;
+	   aline_frm_cnt     <= 'd0;
+	    
+ 
+	 end else begin
+
+	   if (framesync) begin
+	     aline_width_cnt <= 'd0;
+	     aline_frm_cnt   <=  aline_frm_cnt + 1'b1;
+	     
+	   end else begin
+	     aline_width_cnt <= aline_width_cnt + 1'b1;	      
+	   end
+
+	   if (cosine_tvalid) begin
+	     acq_width_cnt   <= acq_width_cnt + 1'b1;
+	   end
+	    
+           if (cosine_tlast) begin
+	     acq_width_cnt   <= 'd0;
+	   end
+
+	   //if (cosine_tlast = 1'b1 && (acq_width_cnt != 919 || acq_width_cnt != 1319)) begin
+	   //  tlast_920_flag <= 1'b1;
+	   //end
+
+	 end // else: !if(rst)
+       end // always_ff @ (posedge clk)
+    end // block: gen_hw_debug
+  endgenerate
 
   initial begin : compile_time_check_initial
     $display("chroma_tp_simple CLOCK_FREQ: %f", CLOCK_FREQ);
@@ -402,3 +492,4 @@ module chroma_tp_simple #(
   end
 
 endmodule
+
