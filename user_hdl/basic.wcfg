@@ -12,15 +12,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000000 us"></ZoomStartTime>
-      <ZoomEndTime time="2,396.000001 us"></ZoomEndTime>
-      <Cursor1Time time="405.000000 us"></Cursor1Time>
+      <ZoomStartTime time="14.584200915 ms"></ZoomStartTime>
+      <ZoomEndTime time="63.234200916 ms"></ZoomEndTime>
+      <Cursor1Time time="30.592415000 ms"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="177"></NameColumnWidth>
-      <ValueColumnWidth column_width="136"></ValueColumnWidth>
+      <NameColumnWidth column_width="222"></NameColumnWidth>
+      <ValueColumnWidth column_width="63"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="46" />
+   <WVObjectSize size="56" />
    <wave_markers>
       <marker time="18115000" label="" />
    </wave_markers>
@@ -96,6 +96,7 @@
       <wvobject fp_name="/chroma_tp_tb/ch_tp0/tp_gain_cnt" type="array">
          <obj_property name="ElementShortName">tp_gain_cnt[7:0]</obj_property>
          <obj_property name="ObjectShortName">tp_gain_cnt[7:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/chroma_tp_tb/ch_tp0/sine" type="array">
          <obj_property name="ElementShortName">sine[11:0]</obj_property>
@@ -321,6 +322,10 @@
          <obj_property name="ElementShortName">clk</obj_property>
          <obj_property name="ObjectShortName">clk</obj_property>
       </wvobject>
+      <wvobject fp_name="/chroma_tp_tc/fm_state" type="array">
+         <obj_property name="ElementShortName">fm_state[1:0]</obj_property>
+         <obj_property name="ObjectShortName">fm_state[1:0]</obj_property>
+      </wvobject>
       <wvobject fp_name="/chroma_tp_tb/sine_tdata" type="array">
          <obj_property name="ElementShortName">sine_tdata[15:0]</obj_property>
          <obj_property name="ObjectShortName">sine_tdata[15:0]</obj_property>
@@ -426,13 +431,25 @@
             <obj_property name="ElementShortName">sine_tdata[15:0]</obj_property>
             <obj_property name="ObjectShortName">sine_tdata[15:0]</obj_property>
             <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-            <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
-            <obj_property name="CellHeight">100</obj_property>
+            <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
          </wvobject>
          <wvobject fp_name="/chroma_tp_tb/sine_tdata" type="array">
             <obj_property name="ElementShortName">sine_tdata[15:0]</obj_property>
             <obj_property name="ObjectShortName">sine_tdata[15:0]</obj_property>
             <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/chroma_tp_tb/sine_tdata" type="array">
+            <obj_property name="ElementShortName">sine_tdata[15:0]</obj_property>
+            <obj_property name="ObjectShortName">sine_tdata[15:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+            <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+            <obj_property name="CellHeight">100</obj_property>
+         </wvobject>
+         <wvobject fp_name="/chroma_tp_tb/cosine_tdata" type="array">
+            <obj_property name="ElementShortName">cosine_tdata[15:0]</obj_property>
+            <obj_property name="ObjectShortName">cosine_tdata[15:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+            <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
          </wvobject>
          <wvobject fp_name="/chroma_tp_tb/cosine_tdata" type="array">
             <obj_property name="ElementShortName">cosine_tdata[15:0]</obj_property>
@@ -450,6 +467,11 @@
             <obj_property name="ObjectShortName">phase_idx[4:0]</obj_property>
             <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
+         <wvobject fp_name="/chroma_tp_tc/firing_cnt" type="array">
+            <obj_property name="ElementShortName">firing_cnt[31:0]</obj_property>
+            <obj_property name="ObjectShortName">firing_cnt[31:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
          <wvobject fp_name="/chroma_tp_tb/cosine_tdata" type="array">
             <obj_property name="ElementShortName">cosine_tdata[15:0]</obj_property>
             <obj_property name="ObjectShortName">cosine_tdata[15:0]</obj_property>
@@ -463,14 +485,77 @@
             <obj_property name="ElementShortName">cosine_tlast</obj_property>
             <obj_property name="ObjectShortName">cosine_tlast</obj_property>
          </wvobject>
+         <wvobject fp_name="/chroma_tp_tb/sine_tvalid" type="logic">
+            <obj_property name="ElementShortName">sine_tvalid</obj_property>
+            <obj_property name="ObjectShortName">sine_tvalid</obj_property>
+         </wvobject>
+         <wvobject fp_name="/chroma_tp_tb/cosine_tvalid" type="logic">
+            <obj_property name="ElementShortName">cosine_tvalid</obj_property>
+            <obj_property name="ObjectShortName">cosine_tvalid</obj_property>
+         </wvobject>
          <wvobject fp_name="/chroma_tp_tb/framesync" type="logic">
             <obj_property name="ElementShortName">framesync</obj_property>
             <obj_property name="ObjectShortName">framesync</obj_property>
+         </wvobject>
+         <wvobject fp_name="/chroma_tp_tb/acq_gate" type="logic">
+            <obj_property name="ElementShortName">acq_gate</obj_property>
+            <obj_property name="ObjectShortName">acq_gate</obj_property>
+         </wvobject>
+         <wvobject fp_name="/chroma_tp_tc/firing_cnt" type="array">
+            <obj_property name="ElementShortName">firing_cnt[31:0]</obj_property>
+            <obj_property name="ObjectShortName">firing_cnt[31:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/chroma_tp_tb/frame_a" type="logic">
             <obj_property name="ElementShortName">frame_a</obj_property>
             <obj_property name="ObjectShortName">frame_a</obj_property>
          </wvobject>
       </wvobject>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tc/fm_state" type="array">
+      <obj_property name="ElementShortName">fm_state[1:0]</obj_property>
+      <obj_property name="ObjectShortName">fm_state[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider105">
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tc/N_BM_FIRINGS" type="array">
+      <obj_property name="ElementShortName">N_BM_FIRINGS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">N_BM_FIRINGS[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tc/N_CF_FIRINGS" type="array">
+      <obj_property name="ElementShortName">N_CF_FIRINGS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">N_CF_FIRINGS[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tc/PRDGY_BM_PRF_NS" type="array">
+      <obj_property name="ElementShortName">PRDGY_BM_PRF_NS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PRDGY_BM_PRF_NS[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tc/PRDGY_CF_PRF_NS" type="array">
+      <obj_property name="ElementShortName">PRDGY_CF_PRF_NS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PRDGY_CF_PRF_NS[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tc/TST_BM_PRF_NS" type="array">
+      <obj_property name="ElementShortName">TST_BM_PRF_NS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">TST_BM_PRF_NS[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tc/TST_CF_PRF_NS" type="array">
+      <obj_property name="ElementShortName">TST_CF_PRF_NS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">TST_CF_PRF_NS[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tc/PRDGY_BM_PRF_N_CLKS" type="array">
+      <obj_property name="ElementShortName">PRDGY_BM_PRF_N_CLKS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PRDGY_BM_PRF_N_CLKS[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/chroma_tp_tc/PRDGY_CF_PRF_N_CLKS" type="array">
+      <obj_property name="ElementShortName">PRDGY_CF_PRF_N_CLKS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PRDGY_CF_PRF_N_CLKS[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
 </wave_config>

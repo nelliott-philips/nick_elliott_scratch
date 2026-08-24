@@ -3,6 +3,28 @@
 # vlib -c
 # vlib work
 # vmap work work
+function cmp_bm(){
+  xvlog.bat -sv box_muller_top.sv
+  xvlog.bat -sv lfsr.sv
+  xvlog.bat -sv lfsr_tb.sv  
+
+}
+
+function elab_bm(){
+    
+  xelab.bat --debug typical \
+      --timescale 1ns/1ps \
+      work.lfsr_tb 
+}
+
+function sim_bm(){
+  #xsim.bat -gui work.lfsr_tb &
+  xsim.bat work.lfsr_tb
+}
+
+function bm(){
+  cmp_bm && elab_bm && sim_bm
+}
 
 function cmp_tp()
 {
@@ -332,9 +354,24 @@ function beam()
 
 
 case $1 in
-    cmp_ext)
-      echo "Running cmp_ext"
-      cmp_ext
+    cmp_bm)
+      echo "Running cmp_bm"
+      cmp_bm
+      exit
+    ;;
+    elab_bm)
+      echo "Running cmp_bm"
+      elab_bm
+      exit
+    ;;
+    sim_bm)
+      echo "Running sim_bm"
+      sim_bm
+      exit
+    ;;
+    bm)
+      echo "Running sim_bm"
+      bm
       exit
     ;;
     cmp_tp)

@@ -58,10 +58,49 @@ module chroma_tp_simple #(
 
   logic [TP_GAIN_CNT_WIDTH-1:0] tp_gain_cnt;
 
-  
+  // 1874 Max and shift down by 7 instead of 12, limits output below 30k   
+  // logic [11:0] tp_arr [0:N_GAIN_CNT-1] = '{
+  //   12'h752,12'h752,12'h752,12'h752,
+  //   12'h739,12'h739,12'h739,12'h739,12'h739,
+  //   12'h71F,12'h71F,12'h71F,12'h71F,12'h71F,
+  //   12'h706,12'h706,12'h706,12'h706,12'h706,
+  //   12'h6EC,12'h6EC,12'h6EC,12'h6EC,12'h6EC,
+  //   12'h6D1,12'h6D1,12'h6D1,12'h6D1,12'h6D1,
+  //   12'h6B8,12'h6B8,12'h6B8,12'h6B8,12'h6B8,
+  //   12'h69E,12'h69E,12'h69E,12'h69E,12'h69E,
+  //   12'h685,12'h685,12'h685,12'h685,12'h685,
+  //   12'h66C,12'h66C,12'h66C,12'h66C,12'h66C,
+  //   12'h652,12'h652,12'h652,12'h652,12'h652,
+  //   12'h637,12'h637,12'h637,12'h637,12'h637,
+  //   12'h61E,12'h61E,12'h61E,12'h61E,12'h61E,
+  //   12'h604,12'h604,12'h604,12'h604,12'h604,
+  //   12'h5EA,12'h5EA,12'h5EA,12'h5EA,12'h5EA,
+  //   12'h5D1,12'h5D1,12'h5D1,12'h5D1,12'h5D1,
+  //   12'h5B6,12'h5B6,12'h5B6,12'h5B6,12'h5B6,
+  //   12'h59C,12'h59C,12'h59C,12'h59C,12'h59C,
+  //   12'h583,12'h583,12'h583,12'h583,12'h583,
+  //   12'h569,12'h569,12'h569,12'h569,12'h569,
+  //   12'h54E,12'h54E,12'h54E,12'h54E,12'h54E,
+  //   12'h536,12'h536,12'h536,12'h536,12'h536,
+  //   12'h51C,12'h51C,12'h51C,12'h51C,12'h51C,
+  //   12'h502,12'h502,12'h502,12'h502,12'h502,
+  //   12'h4E9,12'h4E9,12'h4E9,12'h4E9,12'h4E9,
+  //   12'h4CF,12'h4CF,12'h4CF,12'h4CF,12'h4CF,
+  //   12'h4B6,12'h4B6,12'h4B6,12'h4B6,12'h4B6,
+  //   12'h49C,12'h49C,12'h49C,12'h49C,12'h49C,
+  //   12'h481,12'h481,12'h481,12'h481,12'h481,
+  //   12'h468,12'h468,12'h468,12'h468,12'h468,
+  //   12'h44E,12'h44E,12'h44E,12'h44E,12'h44E,
+  //   12'h434,12'h434,12'h434,12'h434,12'h434,
+  //   12'h41B,12'h41B,12'h41B,12'h41B,12'h41B,
+  //   12'h401,12'h401,12'h401,12'h401,12'h401,
+  //   12'h3E7,12'h3E7,12'h3E7,12'h3E7,12'h3E7,
+  //   12'h3CE,12'h3CE,12'h3CE,12'h3CE,12'h3CE,
+  //   12'h3B4,12'h3B4,12'h3B4,12'h3B4,12'h3B4
+  // };  
 
   // Gain coefficients from the original chroma_tp.sv.
-  logic [11:0] tp_arr [0:N_GAIN_CNT-1] = '{
+  logic [11:0] tp_arr [0:N_GAIN_CNT-1] = '{ 
     12'h7E9,12'h7E9,12'h7E9,12'h7E9,
     12'h7CE,12'h7CE,12'h7CE,12'h7CE,12'h7CE,
     12'h7B2,12'h7B2,12'h7B2,12'h7B2,12'h7B2,
@@ -245,8 +284,9 @@ module chroma_tp_simple #(
     if (rst) begin
       accum_2x_aline_sync <= 1'b0;
       phase_idx           <= '0;
-    end else if (framesync && frame_a) begin
-       accum_2x_aline_sync <= 1'b0;
+    end else if (frame_a) begin
+      accum_2x_aline_sync <= 1'b0;
+      phase_idx           <= 'd0;
     end else if (!frame_a && cosine_tlast) begin
       accum_2x_aline_sync <= ~accum_2x_aline_sync;
 				
@@ -327,7 +367,7 @@ module chroma_tp_simple #(
       end
 
       // Restart count when count is down to zero or if end of acquisition window packet
-      if (tp_gain_cnt == '0 || cosine_tlast) begin
+      if (tp_gain_cnt == 'd0 || cosine_tlast) begin
         tp_gain_cnt <= N_GAIN_CNT-1;
       end
        
@@ -487,8 +527,7 @@ module chroma_tp_simple #(
   initial begin : compile_time_check_initial
     $display("chroma_tp_simple CLOCK_FREQ: %f", CLOCK_FREQ);
     $display("chroma_tp_simple DESIRED_FREQ: %f", DESIRED_FREQ);
-    $display("chroma_tp_simple LUT: %0d phases x %0d samples = %0d samples",
-             N_PHASES, N_CARRIER_SAMPLES, LUT_DEPTH);
+    $display("chroma_tp_simple LUT: %0d phases x %0d samples = %0d samples", N_PHASES, N_CARRIER_SAMPLES, LUT_DEPTH);
   end
 
 endmodule

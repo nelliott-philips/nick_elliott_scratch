@@ -24,12 +24,16 @@ module chroma_tp_tc;
    localparam integer USE_SMALL_SCALE_SIM = 0;
    
    
-   localparam integer PRDGY_BM_PRF_NS = 18_600; // 18.6 us
-   localparam integer PRDGY_CF_PRF_NS = 14_600; // 14.6 us
+   // localparam integer PRDGY_BM_PRF_NS = 18_600*896;  // 18.6*896 us
+   // localparam integer PRDGY_CF_PRF_NS = 14_600*2048; // 14.6*2048 us
+   localparam integer N_BM_FIRINGS = 16*4; // !!! NOT AN ACTUAL IMPLEMENTATION NUMBER, JUST FOR SIM SCALE
+   localparam integer N_CF_FIRINGS = 32*4; // !!! NOT AN ACTUAL IMPLEMENTATION NUMBER, JUST FOR SIM SCALE
+   localparam integer PRDGY_BM_PRF_NS = 18_600;  // 18.6 us
+   localparam integer PRDGY_CF_PRF_NS = 14_600; // 14.6us
    localparam integer TST_BM_PRF_NS = 10; // 18.6 us
    localparam integer TST_CF_PRF_NS = 4; // 14.6 us
-   localparam integer PRDGY_BM_PRF_N_CLKS = PRDGY_BM_PRF_NS/10; // 18.6 us
-   localparam integer PRDGY_CF_PRF_N_CLKS = PRDGY_CF_PRF_NS/10; // 14.6 us
+   localparam integer PRDGY_BM_PRF_N_CLKS = (N_BM_FIRINGS*PRDGY_BM_PRF_NS)/10; // 18.6 us
+   localparam integer PRDGY_CF_PRF_N_CLKS = (N_CF_FIRINGS*PRDGY_CF_PRF_NS)/10; // 14.6 us
 
    initial begin
       @(negedge `TB.rst);
@@ -46,9 +50,9 @@ module chroma_tp_tc;
      forever begin
        if (!USE_SMALL_SCALE_SIM) begin
          fm_state = BM_FRAME;
-         repeat(PRDGY_BM_PRF_N_CLKS) @(posedge `TB.clk);
+         repeat(PRDGY_BM_PRF_N_CLKS*10) @(posedge `TB.clk);
          fm_state = CF_FRAME;
-         repeat(PRDGY_CF_PRF_N_CLKS) @(posedge `TB.clk);
+         repeat(PRDGY_CF_PRF_N_CLKS*10) @(posedge `TB.clk);
        end else begin
          fm_state = BM_FRAME;
          repeat(TST_BM_PRF_NS) @(posedge `TB.clk);
@@ -75,38 +79,88 @@ module chroma_tp_tc;
       
    end
 
-   localparam integer ACQ_OFFSET                 = 20;
+   localparam integer ACQ_OFFSET                 = 8;
    localparam integer ACQ_GATE_INTERVAL_PRDGY_BM = 1320;
    localparam integer ACQ_GATE_INTERVAL_PRDGY_CF = 920;
    logic	      acq_gate                   = 1'b0;
-   
+   integer	      firing_cnt;
 
+   integer	      ii;
    initial begin
-     
-     forever begin
-	
-       @(posedge `TB.framesync);
-	
-       if (fm_state == BM_FRAME) begin
-	 `TB.frame_a = 1'b1;	  
-	 #(ACQ_OFFSET*10ns);
-         `TB.acq_gate  = 1'b1;
 
-         $display("TIME: %p, BM ACQUISITION!", $time);	  
-	 #(ACQ_GATE_INTERVAL_PRDGY_BM*10ns);
-         `TB.acq_gate = 1'b0;	  
-       end else if (fm_state == CF_FRAME) begin
-	 `TB.frame_a = 1'b0;	  	  
-	 #(ACQ_OFFSET*10ns);
-         `TB.acq_gate = 1'b1;
-         $display("TIME: %p, CM ACQUISITION!", $time);	  	  
-	 #(ACQ_GATE_INTERVAL_PRDGY_CF*10ns);
-         `TB.acq_gate = 1'b0;	  
-       end
-	  
-     end   
-     
-   end // initial begin
+     forever begin
+       @(posedge `TB.framesync);
+       firing_cnt = 0;
+        
+       if (fm_state == BM_FRAME) begin
+         `TB.frame_a = 1'b1;	
+       	 #(ACQ_OFFSET*10ns);
+       	
+         for(ii = 0; ii < N_BM_FIRINGS-1; ii++) begin
+       	   `TB.acq_gate = 1'b1;
+       	   #(ACQ_GATE_INTERVAL_PRDGY_BM*10ns);
+       	   `TB.acq_gate = 1'b0;
+       	   
+           //if(ii != N_BM_FIRINGS-1)
+             #((PRDGY_BM_PRF_NS-ACQ_GATE_INTERVAL_PRDGY_BM)*10ns);
+       	    
+       	   firing_cnt++;
+         end
+       	
+       end else if (fm_state == CF_FRAME) begin // if (fm_state == BM_FRAME)
+         `TB.frame_a = 1'b0;
+         #(ACQ_OFFSET*10ns);
+       
+         for(ii = 0; ii < N_CF_FIRINGS-1; ii++) begin
+           `TB.acq_gate = 1'b1;
+       	   #(ACQ_GATE_INTERVAL_PRDGY_CF*10ns);
+       	   `TB.acq_gate = 1'b0;
+       	   
+           //if(ii != N_BM_FIRINGS-1)
+       	     #((PRDGY_CF_PRF_NS-ACQ_GATE_INTERVAL_PRDGY_CF)*10ns);
+       	   
+       	   firing_cnt++;
+         end
+       end // if (fm_state == CF_FRAME)
+     end // forever begin
+      
+   end   
+
+   //initial begin
+   //  
+   //  forever begin
+   //	
+   //    @(posedge `TB.framesync);
+   //    firing_cnt = 0;
+   //	
+   //    if (fm_state == BM_FRAME) begin
+   //	 `TB.frame_a = 1'b1;	  
+   //	 #(ACQ_OFFSET*10ns);
+   //	 repeat(N_BM_FIRINGS) begin
+   //        `TB.acq_gate = 1'b1;
+   //        $display("TIME: %p, BM ACQUISITION!", $time);	  	    	    
+   //	   #(ACQ_GATE_INTERVAL_PRDGY_BM*10ns);
+   //        `TB.acq_gate = 1'b0;
+   //	   #( (PRDGY_BM_PRF_NS-ACQ_GATE_INTERVAL_PRDGY_BM)*10ns);
+   //	   firing_cnt++;
+   //	 end
+   //    end else if (fm_state == CF_FRAME) begin
+   //	 `TB.frame_a = 1'b0;	  	  
+   //	 #(ACQ_OFFSET*10ns);
+   //	 repeat(N_CF_FIRINGS) begin
+   //        `TB.acq_gate = 1'b1;
+   //        $display("TIME: %p, CM ACQUISITION!", $time);	  	  
+   //	   #(ACQ_GATE_INTERVAL_PRDGY_CF*10ns);
+   //        `TB.acq_gate = 1'b0;
+   //	   #( (PRDGY_CF_PRF_NS-ACQ_GATE_INTERVAL_PRDGY_BM)*10ns);
+   //	   firing_cnt++;
+   //      end
+   //	  
+   //    end
+   //	  
+   //  end   
+   //  
+   //end // initial begin
 
    integer fd;
    integer cosine_sample_cnt = 0;
