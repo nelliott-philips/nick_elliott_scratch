@@ -67,8 +67,18 @@ proc connect_target {{target_num ""}} {
     }
 }
 
+
 proc fast_axi_rw {addr {count 1000} {delay_ms 0} {mode "rw"} {pattern "0xA5A5A5A5"} {target "3"}} {
 
+    set WD_EN_MSK [expr {0x0001 << 0}]
+    set WD_APPEASE_WD [expr {0x0001 << 1}]
+    set WD_INTRPT_EN [expr {0x0001 << 2}]
+    set WD_PULL_DWN_EARLY_WARN_INT [expr {0x0001 << 3}]
+    set WD_HAS_TIMED_OUT [expr {0x0001 << 4}]
+    set WD_IS_SHUTDOWN [expr {0x0001 << 5}]
+    set WD_FORCE_SHUTDOWN [expr {0x0001 << 6}]
+    set WD_EARLY_WARN_POLL_STATUS [expr {0x0001 << 7}]
+    
     # Always (re)assert the target selection, even if a session is
     # already connected, since the desired target index still needs
     # to be selected explicitly when multiple candidates match.
@@ -85,6 +95,26 @@ proc fast_axi_rw {addr {count 1000} {delay_ms 0} {mode "rw"} {pattern "0xA5A5A5A
     puts "----------------------------------------------------------"
 
     set t0 [clock milliseconds]
+
+    puts "CLEARING/APPEASING!!!"
+
+    if {[catch {set rval [mrd -value $addr]} err]} {
+        puts [format {  [%6d] READ FAILED at 0x%08X: %s} $i $addr $err]
+        incr errors
+    } else {
+      puts [format {  [%6d] read 0x%08X -> 0x%08X} 0 $addr $rval]
+
+    }
+
+    mwr $addr $WD_APPEASE_WD
+
+    if {[catch {set rval [mrd -value $addr]} err]} {
+        puts [format {  [%6d] READ FAILED at 0x%08X: %s} $i $addr $err]
+        incr errors
+    } else {
+      puts [format {  [%6d] read 0x%08X -> 0x%08X} 0 $addr $rval]
+
+    }
 
     for {set i 0} {$i < $count} {incr i} {
 
@@ -112,7 +142,11 @@ proc fast_axi_rw {addr {count 1000} {delay_ms 0} {mode "rw"} {pattern "0xA5A5A5A
                     puts [format {  [%6d] READ FAILED at 0x%08X: %s} $i $addr $err]
                     incr errors
                 } else {
-                    if {$i < 5 || ($i % 100) == 0} {
+                    if {$i == 0} {
+                        puts [format {  [%6d] read 0x%08X -> 0x%08X} $i $addr $rval]
+			mwr $addr 0x1
+			puts "Write: 0x1"
+                    } elseif {$i < 512 || ($i % 100) == 0} {
                         puts [format {  [%6d] read 0x%08X -> 0x%08X} $i $addr $rval]
                     }
                 }

@@ -37,9 +37,9 @@ set -uo pipefail
 #TARGET="${6:-3}"
 
 ADDR="${1:-0x70000040}"
-COUNT="${2:-64}"
+COUNT="${2:-170}"
 DELAY_MS="${3:-10}"
-MODE="${4:-read}"
+MODE="${4:-override}"
 PATTERN="${5:-0xA0000000}"
 TARGET="${6:-3}"
 
