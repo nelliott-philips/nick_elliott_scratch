@@ -6,7 +6,9 @@
 function cmp_bm(){
   xvlog.bat -sv box_muller_top.sv
   xvlog.bat -sv lfsr.sv
-  xvlog.bat -sv lfsr_tb.sv  
+  xvlog.bat -sv lfsr_tb.sv
+  xvlog.bat -sv bm.sv
+  xvlog.bat -sv bm_tb.sv
 
 }
 

@@ -134,7 +134,7 @@ module lfsr #(
       end // initial begin
 
       initial begin
-          taps_a = SEEDS_A;
+          taps_a  = SEEDS_A;
           poly_a  = CONST_POLY_A;
           taps_b  = SEEDS_B;
           poly_b  = CONST_POLY_B;

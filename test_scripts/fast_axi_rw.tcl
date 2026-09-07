@@ -68,6 +68,72 @@ proc connect_target {{target_num ""}} {
 }
 
 
+proc test_appease {addr {count 1000} {delay_ms 0} {mode "rw"} {pattern "0xA5A5A5A5"} {target "3"}} {
+
+    set WD_EN_MSK [expr {0x0001 << 0}]
+    set WD_APPEASE_WD [expr {0x0001 << 1}]
+    set WD_INTRPT_EN [expr {0x0001 << 2}]
+    set WD_PULL_DWN_EARLY_WARN_INT [expr {0x0001 << 3}]
+    set WD_HAS_TIMED_OUT [expr {0x0001 << 4}]
+    set WD_IS_SHUTDOWN [expr {0x0001 << 5}]
+    set WD_FORCE_SHUTDOWN [expr {0x0001 << 6}]
+    set WD_EARLY_WARN_POLL_STATUS [expr {0x0001 << 7}]
+    
+    # Test for initial state, if not in desired state reset be disabling WD and re-enabling
+
+    # Always (re)assert the target selection, even if a session is
+    # already connected, since the desired target index still needs
+    # to be selected explicitly when multiple candidates match.
+    connect_target $target
+
+    set addr [expr {$addr}]
+    set errors 0
+    set use_inc [expr {[string tolower $pattern] eq "inc"}]
+    set fixed_val [expr {$use_inc ? 0 : $pattern}]
+
+    puts "----------------------------------------------------------"
+    puts [format "fast_axi_rw: addr=0x%08X count=%d delay_ms=%d mode=%s pattern=%s" \
+        $addr $count $delay_ms $mode [expr {$use_inc ? "incrementing" : $pattern}]]
+    puts "----------------------------------------------------------"
+
+    set t0 [clock milliseconds]
+
+    puts "CLEARING/APPEASING!!!"
+
+    if {[catch {set rval [mrd -value $addr]} err]} {
+        puts [format {  [%6d] READ FAILED at 0x%08X: %s} $i $addr $err]
+        incr errors
+    } else {
+	if ( $rval == "0x00000000" ) {
+	    puts [format {  [%6d] read 0x%08X -> 0x%08X} 0 $addr $rval]
+	} elseif ( $rval == "0x00000001") {
+	    
+	}
+    }
+    
+
+    # Test for appeasement functionality
+
+      # run for 10 timeout intervals with appease being written
+
+    # Test for timeout
+      # run timeout 3 times and clear each time
+}
+
+proc test_timeout {addr {count 1000} {delay_ms 0} {mode "rw"} {pattern "0xA5A5A5A5"} {target "3"}} {
+    
+    set WD_EN_MSK [expr {0x0001 << 0}]
+    set WD_APPEASE_WD [expr {0x0001 << 1}]
+    set WD_INTRPT_EN [expr {0x0001 << 2}]
+    set WD_PULL_DWN_EARLY_WARN_INT [expr {0x0001 << 3}]
+    set WD_HAS_TIMED_OUT [expr {0x0001 << 4}]
+    set WD_IS_SHUTDOWN [expr {0x0001 << 5}]
+    set WD_FORCE_SHUTDOWN [expr {0x0001 << 6}]
+    set WD_EARLY_WARN_POLL_STATUS [expr {0x0001 << 7}]
+
+}
+
+
 proc fast_axi_rw {addr {count 1000} {delay_ms 0} {mode "rw"} {pattern "0xA5A5A5A5"} {target "3"}} {
 
     set WD_EN_MSK [expr {0x0001 << 0}]
@@ -145,7 +211,6 @@ proc fast_axi_rw {addr {count 1000} {delay_ms 0} {mode "rw"} {pattern "0xA5A5A5A
                     if {$i == 0} {
                         puts [format {  [%6d] read 0x%08X -> 0x%08X} $i $addr $rval]
 			mwr $addr 0x1
-			puts "Write: 0x1"
                     } elseif {$i < 512 || ($i % 100) == 0} {
                         puts [format {  [%6d] read 0x%08X -> 0x%08X} $i $addr $rval]
                     }
